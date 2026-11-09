@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Термінал заправника та Журнал відомостей ПММ</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #10b981;
+            --accent-warn: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 12px; display: flex; justify-content: center; }
+        .wrapper { width: 100%; max-width: 1440px; }
+        
+        .tabs-header { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .tab-btn { background: #1e293b; border: 1px solid var(--border); color: var(--text-muted); padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .btn-back-login { background: #334155; color: #f1f5f9; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; }
+        .btn-back-login:hover { background: #475569; color: #fff; border-color: #64748b; }
+        .point-tag { background: #0369a1; color: #e0f2fe; padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; }
+        .user-tag { background: #334155; color: #f8fafc; padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .step-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .step-title span { background: var(--primary); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+
+        .form-label-row { display: flex; justify-content: space-between; align-items: center; min-height: 24px; margin-bottom: 6px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        
+        input, select { 
+            width: 100%; height: 44px; padding: 10px 12px; background: #0f172a; 
+            border: 1px solid var(--border); border-radius: 8px; color: #fff; 
+            font-size: 0.95rem; margin-bottom: 12px; 
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        input[type="date"] { color-scheme: dark; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: center; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: center; }
+        .vehicle-info { background: #0b1320; border-left: 4px solid var(--accent); padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 0.9rem; }
+        .vehicle-info b { color: #fff; }
+
+        .waybill-status-ok { background: rgba(16, 185, 129, 0.14); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 10px 12px; border-radius: 8px; font-size: 0.86rem; margin-top: 8px; }
+        .waybill-status-pencil { background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.45); color: #fde68a; padding: 10px 12px; border-radius: 8px; font-size: 0.86rem; margin-top: 8px; }
+
+        .period-badge { display: inline-flex; align-items: center; background: #0284c7; color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+        .info-badge { background: #0f172a; border: 1px solid #0284c7; color: #38bdf8; padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-accent { background: var(--accent); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-secondary { background: #334155; color: #cbd5e1; }
+        .btn-warn { background: var(--accent-warn); color: #1e293b; }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+
+        .hidden { display: none !important; }
+        .autocomplete-box { position: relative; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid var(--border); border-radius: 8px; z-index: 50; max-height: 260px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        .autocomplete-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+        .autocomplete-item:hover { background: #2563eb; color: #fff; }
+
+        .table-responsive { width: 100%; overflow-x: auto; background: #1e293b; border-radius: 8px; border: 1px solid var(--border); }
+        .vidomist-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: center; }
+        .vidomist-table th, .vidomist-table td { border: 1px solid var(--border); padding: 6px 5px; white-space: nowrap; }
+        .vidomist-table th { background: #0f172a; color: #94a3b8; font-weight: 600; }
+        .vidomist-table th.th-fuel { background: #1e3a5f; color: #7dd3fc; }
+        .vidomist-table th.th-oil { background: #3b2d15; color: #fde047; }
+        .vidomist-table th.th-liquid { background: #1f372d; color: #86efac; }
+        .vidomist-table tr:hover td { background: #1e3a5f; cursor: pointer; }
+        .total-row td { background: #0f172a; font-weight: 700; color: #38bdf8; border-top: 2px solid #475569; }
+
+        /* КАРТКИ ДАШБОРДУ ЗВЕДЕНОЇ АНАЛІТИКИ */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .kpi-card { background: #0f172a; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+        .kpi-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+        .kpi-val { font-size: 1.35rem; font-weight: 800; }
+        .kpi-sub { font-size: 0.76rem; color: #94a3b8; margin-top: 3px; }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0 !important; }
+            .tabs-header, .no-print, .action-col { display: none !important; }
+            .wrapper { max-width: 100% !important; width: 100% !important; }
+            .card { background: #fff !important; border: none !important; padding: 0 !important; }
+            .vidomist-table { font-size: 8pt !important; border: 1px solid #000 !important; color: #000 !important; }
+            .vidomist-table th, .vidomist-table td { border: 1px solid #000 !important; padding: 3px 2px !important; color: #000 !important; opacity: 1 !important; }
+            .vidomist-table th { background: #f0f0f0 !important; color: #000 !important; }
+            .total-row td { background: #f5f5f5 !important; color: #000 !important; }
+            .print-header { display: block !important; margin-bottom: 12px; }
+            @page { size: landscape; margin: 6mm; }
+        }
+        .print-header { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="tabs-header no-print">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="tab-btn active" id="tabBtnEntry" onclick="switchTab('entry')">⛽ Внесення заправки</button>
+            <button class="tab-btn" id="tabBtnJournal" onclick="switchTab('journal')">📋 Журнал роздавальних</button>
+            <button class="tab-btn" id="tabBtnSummary" onclick="switchTab('summary')">📊 Зведені відомості</button>
+            <button class="tab-btn" id="tabBtnIncome" onclick="switchTab('income')">📥 Надходження ПММ</button>
+        </div>
+        <div class="header-actions">
+            <div class="point-tag" id="topPointTag">Точка: ...</div>
+            <div class="user-tag" id="topUserTag">Заправник: ...</div>
+            <button class="btn-back-login" onclick="logoutRefueler()">🚪 Вихід</button>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 1: ВНЕСЕННЯ ЗАПРАВКИ -->
+    <div id="viewEntry" style="max-width: 680px; margin: 0 auto;">
+        <div id="editBanner" class="card hidden" style="background: #451a03; border-color: #f59e0b;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b style="color: #fbbf24;">⚠️ Режим коригування запису заправки</b>
+                    <div id="editBannerText" style="font-size:0.85rem; color:#fef3c7;">Відомість №, рядок №</div>
+                </div>
+                <button type="button" class="btn-sm btn-secondary" onclick="cancelEditing()">Скасувати</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="step-title"><span>1</span> Оберіть автомобіль або генератор (ІТ)</div>
+
+            <div class="grid-2" style="margin-bottom: 4px;">
+                <div>
+                    <label for="selQuickUnitFilter" style="margin-bottom: 4px;" id="lblQuickUnitFilter">Підрозділ нашого батальйону</label>
+                    <select id="selQuickUnitFilter" onchange="onQuickUnitFilterChange(this.value)">
+                        <option value="ALL">Усі підрозділи батальйону</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="vehInput" style="margin-bottom: 4px;">Пошук за номером (вся в/ч) *</label>
+                    <div class="autocomplete-box">
+                        <input type="text" id="vehInput" placeholder="Напр: 2414 або 4001ІТ..." autocomplete="off">
+                        <div id="autoList" class="autocomplete-list hidden"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="vehCard" class="vehicle-info hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <div>
+                        <div>Номер та марка: <b id="lblMarka">-</b></div>
+                        <div>Підрозділ: <b id="lblPidrozdil">-</b></div>
+                        <div>Одержувач у відомості: <b id="lblRecipient" style="color: #38bdf8;">-</b></div>
+                        <div>Тип пального: <b id="lblFuelType" style="color: #a78bfa;">-</b></div>
+                    </div>
+                    <button type="button" class="btn-sm btn-secondary" onclick="clearSelectedVehicle()" style="white-space: nowrap; height: fit-content; padding: 8px 12px;">
+                        ↩️ Змінити номер
+                    </button>
+                </div>
+                <div id="boxWaybillSyncStatus"></div>
+            </div>
+
+            <div id="boxExternalVehicle" class="card hidden" style="background: #0f172a; border: 1px solid #0284c7; padding: 14px; margin-top: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <b style="color: #38bdf8; font-size: 0.95rem;">🏢 Заправка сторонньої військової частини</b>
+                    <button type="button" class="btn-sm btn-secondary" onclick="clearSelectedVehicle()">↩️ Скасувати</button>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label for="txtExtUnit" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 4px;">Військова частина одержувач *</label>
+                        <input type="text" id="txtExtUnit" value="А" maxlength="5" placeholder="А____" oninput="handleExtUnitInput(this)" style="font-weight: 700; letter-spacing: 0.05em;">
+                    </div>
+                    <div>
+                        <label for="txtExtVehNum" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 4px;">Військовий номер авто / ІТ *</label>
+                        <input type="text" id="txtExtVehNum" placeholder="напр: 1234 А1">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label for="txtExtMarka" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 4px;">Марка та модель *</label>
+                        <input type="text" id="txtExtMarka" placeholder="напр: КрАЗ 6322 / Duster">
+                    </div>
+                    <div>
+                        <label for="selExtFuelType" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 4px;">Тип пального двигуна *</label>
+                        <select id="selExtFuelType" onchange="onExtFuelTypeChange(this.value)">
+                            <option value="ДП">Дизель (ДП)</option>
+                            <option value="АБ">Бензин (АБ)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="blockVidomist" class="card hidden">
+            <div class="step-title"><span>2</span> Роздавальна відомість та дата заправки</div>
+            
+            <label for="selVidomist" style="margin-bottom: 6px;">Роздавальна відомість одержувача</label>
+            <select id="selVidomist" onchange="onVidomistSelectChange(this.value)"></select>
+
+            <div id="boxNewVidomistFields" class="info-badge hidden">
+                <div style="font-weight: 700; margin-bottom: 8px;">Створення нової роздавальної відомості:</div>
+                <div class="grid-2">
+                    <div>
+                        <label style="color:#94a3b8; font-size:0.8rem; margin-bottom:4px;">Номер відомості</label>
+                        <input type="text" id="txtNewDocNumber" readonly style="background:#1e293b; color:#38bdf8; font-weight:700; cursor:not-allowed;">
+                    </div>
+                    <div>
+                        <label for="numNewMaxRows" style="color:#94a3b8; font-size:0.8rem; margin-bottom:4px;">Кількість рядків (ліміт)</label>
+                        <input type="number" id="numNewMaxRows" value="15" min="5" max="50" style="background:#0f172a;">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="form-label-row">
+                    <label for="fDate">Дата видачі пального *</label>
+                    <span id="badgePeriod" class="period-badge">Період: -</span>
+                </div>
+                <input type="date" id="fDate" onchange="onDateChange(this.value)">
+            </div>
+
+            <div id="boxExternalDocAndDriver" class="grid-2 hidden">
+                <div>
+                    <label for="txtDocNumber" style="margin-bottom: 6px;">Номер шляхового листа сторонньої в/ч</label>
+                    <input type="text" id="txtDocNumber" placeholder="напр: 2926">
+                </div>
+                <div>
+                    <label for="txtDriver" style="margin-bottom: 6px;">ПІБ водія сторонньої в/ч</label>
+                    <input type="text" id="txtDriver" placeholder="Прізвище І.Б.">
+                </div>
+            </div>
+        </div>
+
+        <div id="blockFueling" class="card hidden">
+            <div class="step-title"><span>3</span> Обсяги виданого майна</div>
+
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+                <label style="color:#7dd3fc; font-weight:700; margin-bottom:6px;">Пальне</label>
+                <div class="grid-2">
+                    <div><select id="selFuelCode"></select></div>
+                    <div><input type="number" id="numFuelQty" step="1" min="0" placeholder="Літри пального (0)"></div>
+                </div>
+            </div>
+
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+                <label style="color:#fde047; font-weight:700; margin-bottom:6px;">Олива (долив, крок 0.1 л) — обов'язково оберіть марку при введенні літрів</label>
+                <div class="grid-2">
+                    <div><select id="selOilCode" onchange="this.style.borderColor=''"></select></div>
+                    <div><input type="number" id="numOilQty" step="0.1" min="0" placeholder="Літри оливи (0.0)" oninput="autoSelectSingleOption('selOilCode', this.value)"></div>
+                </div>
+            </div>
+
+            <div>
+                <label style="color:#86efac; font-weight:700; margin-bottom:6px;">Спеціальні рідини (крок 0.1 л) — обов'язково оберіть тип при введенні літрів</label>
+                <div class="grid-2">
+                    <div><select id="selLiquidCode" onchange="this.style.borderColor=''"></select></div>
+                    <div><input type="number" id="numLiquidQty" step="0.1" min="0" placeholder="Літри рідини (0.0)" oninput="autoSelectSingleOption('selLiquidCode', this.value)"></div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-accent" id="btnSubmitFueling" onclick="saveRecord()" style="margin-top: 14px;">Зберегти заправку</button>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 2: ЖУРНАЛ РОЗДАВАЛЬНИХ -->
+    <div id="viewJournal" class="hidden">
+        <div class="card no-print">
+            <div class="grid-3" style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                <div id="boxFilterPoint" class="hidden">
+                    <label style="font-size: 0.78rem;">Точка видачі (СПММ):</label>
+                    <select id="selFilterPoint" onchange="applyJournalFilters()" style="height:38px; margin:0;"></select>
+                </div>
+                <div>
+                    <label style="font-size: 0.78rem;">Одержувач (підрозділ/бат):</label>
+                    <select id="selFilterRecipient" onchange="applyJournalFilters()" style="height:38px; margin:0;"></select>
+                </div>
+                <div>
+                    <label style="font-size: 0.78rem;">Статус відомості:</label>
+                    <select id="selFilterStatus" onchange="applyJournalFilters()" style="height:38px; margin:0;">
+                        <option value="all">Усі (відкриті та закриті)</option>
+                        <option value="open" selected>Тільки відкриті</option>
+                        <option value="closed">Тільки закриті</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; flex:1;">
+                    <label style="margin:0; font-weight:700;">Відомість:</label>
+                    <select id="selJournalVidomist" onchange="loadVidomistDetails(this.value)" style="width: auto; min-width: 340px; margin:0;"></select>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-warn btn-sm" id="btnCloseVidomistBtn" onclick="closeCurrentVidomist()">🔒 Закрити відомість</button>
+                    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Друк</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="print-header" style="background:#0f172a; border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <b id="prnDocTitle" style="font-size:1rem; color:#38bdf8;">РОЗДАВАЛЬНА ВІДОМІСТЬ № ___</b>
+                    <span id="prnStatus" style="margin-left:8px; font-weight:700; font-size:0.85rem;"></span>
+                    <div id="prnRegTitle" style="font-size:0.8rem; color:#94a3b8; margin-top:2px;">Реєстраційний № ___</div>
+                </div>
+                <div style="text-align:right; font-size:0.85rem;">
+                    <div id="prnPointName" style="font-weight:700;">Пункт видачі: -</div>
+                    <div>Одержувач (підрозділ/бат): <b id="prnKomu" style="color:#fde047;">-</b></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="vidomist-table" id="tableVidomist">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBodyRows"></tbody>
+                <tfoot id="tableFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 3: ЗВЕДЕНІ ВІДОМОСТІ (АНАЛІТИКА ЗАПРАВОК ПО ВСІХ НАКЛАДНИХ) -->
+    <div id="viewSummary" class="hidden">
+        <div class="card no-print">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                <div>
+                    <b style="font-size:1rem; color:#38bdf8;">📊 Зведена відомість видачі ПММ за всіма роздавальними відомостями</b>
+                    <div style="font-size:0.8rem; color:#94a3b8;" id="lblSummaryLoadStatus">Аналіз даних по всіх відомостях місяця</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary btn-sm" onclick="syncAllVidomostiForSummary()">🔄 Пересканувати всі РВ</button>
+                    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Друк зведеної</button>
+                </div>
+            </div>
+
+            <div class="grid-4" style="border-top:1px solid var(--border); padding-top:12px;">
+                <div>
+                    <label style="font-size:0.76rem;">1. Групування таблиці (Розріз):</label>
+                    <select id="sumGroupMode" onchange="renderSummaryView()" style="height:38px; margin:0; font-weight:700; color:#38bdf8;">
+                        <option value="recipient">🏢 По підрозділах / одержувачах</option>
+                        <option value="vidomist">📄 По всіх накладних (відомостях РВ)</option>
+                        <option value="vehicle">🚗 По кожній машині / генератору ІТ</option>
+                    </select>
+                </div>
+                <div id="boxSumPointFilter">
+                    <label style="font-size:0.76rem;">2. Точка видачі:</label>
+                    <select id="sumFilterPoint" onchange="renderSummaryView()" style="height:38px; margin:0;">
+                        <option value="ALL">Усі точки</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.76rem;">3. Батальйон / Одержувач:</label>
+                    <select id="sumFilterRecipient" onchange="renderSummaryView()" style="height:38px; margin:0;">
+                        <option value="ALL">Усі одержувачі та батальйони</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.76rem;">4. Період / Декада:</label>
+                    <select id="sumFilterPeriod" onchange="renderSummaryView()" style="height:38px; margin:0;">
+                        <option value="ALL">Весь місяць</option>
+                        <option value="I">Період I</option>
+                        <option value="II">Період II</option>
+                        <option value="III">Період III</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-3" style="margin-top:10px;">
+                <div>
+                    <label style="font-size:0.76rem;">5. Категорія / Тип майна:</label>
+                    <select id="sumFilterItemType" onchange="renderSummaryView()" style="height:38px; margin:0;">
+                        <option value="ALL">Усі види ПММ (Пальне + Оливи + Рідини)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.76rem;">6. Статус відомостей РВ:</label>
+                    <select id="sumFilterStatus" onchange="renderSummaryView()" style="height:38px; margin:0;">
+                        <option value="ALL">Усі (відкриті та закриті РВ)</option>
+                        <option value="open">Тільки відкриті РВ</option>
+                        <option value="closed">Тільки закриті РВ</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.76rem;">7. Пошук (номер авто, марка, № РВ, підрозділ):</label>
+                    <input type="text" id="sumSearchInput" placeholder="Введіть для фільтрації..." oninput="renderSummaryView()" style="height:38px; margin:0;">
+                </div>
+            </div>
+        </div>
+
+        <!-- КАРТКИ ПІДСУМКІВ (ДАШБОРД) -->
+        <div class="kpi-grid" id="summaryKpiGrid"></div>
+
+        <!-- ТАБЛИЦЯ ЗВЕДЕНОЇ АНАЛІТИКИ -->
+        <div class="table-responsive">
+            <table class="vidomist-table" id="tblSummaryMain">
+                <thead id="tblSummaryHead"></thead>
+                <tbody id="tblSummaryBody"></tbody>
+                <tfoot id="tblSummaryFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 4: НАДХОДЖЕННЯ ПММ -->
+    <div id="viewIncome" class="hidden" style="max-width: 960px; margin: 0 auto;">
+        <div id="editIncBanner" class="card hidden" style="background: #451a03; border-color: #f59e0b; padding:10px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b style="color: #fbbf24;">⚠️ Режим редагування запису надходження</b>
+                <button type="button" class="btn-sm btn-secondary" onclick="cancelEditIncome()">Скасувати</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="step-title"><span>📥</span> Внесення надходження ПММ (Прихід на точку / склад)</div>
+
+            <div class="grid-3">
+                <div>
+                    <label for="incDate" style="margin-bottom: 4px;">Дата надходження *</label>
+                    <input type="date" id="incDate">
+                </div>
+                <div>
+                    <label for="incSection" style="margin-bottom: 4px;">Категорія майна *</label>
+                    <select id="incSection" onchange="renderIncomeTypeOptions()">
+                        <option value="fuel">⛽ Пальне</option>
+                        <option value="oil">🛢️ Оливи та мастила</option>
+                        <option value="liquid">💧 Спеціальні рідини</option>
+                    </select>
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label for="incTypeSelect" style="margin:0;">Тип майна (з ref_type) *</label>
+                        <button type="button" class="btn-sm btn-secondary" id="btnToggleCustomIncType" onclick="toggleCustomIncType()" style="padding:2px 8px; font-size:0.74rem;">+ Ввести вручну</button>
+                    </div>
+                    <select id="incTypeSelect"></select>
+                    <input type="text" id="incTypeCustom" class="hidden" placeholder="Введіть назву/марку майна вручну...">
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div>
+                    <label for="incLiters" style="margin-bottom: 4px; color:#38bdf8;">Кількість у Літрах (л)</label>
+                    <input type="number" id="incLiters" step="0.1" min="0" placeholder="Можна заповнити лише літри (0.0)">
+                </div>
+                <div>
+                    <label for="incKg" style="margin-bottom: 4px; color:#fde047;">АБО Кількість у Кілограмах (кг)</label>
+                    <input type="number" id="incKg" step="0.1" min="0" placeholder="Можна заповнити лише кг (0.0)">
+                </div>
+                <div>
+                    <label for="incDocNote" style="margin-bottom: 4px;">Документ / Примітка (накладна, від кого)</label>
+                    <input type="text" id="incDocNote" placeholder="Напр: Рознарядка №125 / Склад">
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-accent" id="btnSaveIncome" onclick="saveIncomeRecord()">📥 Зберегти надходження ПММ</button>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <b style="font-size:0.95rem;">📋 Історія надходжень за місяць</b>
+                <button class="btn-sm btn-primary" onclick="initApp()">🔄 Оновити</button>
+            </div>
+            <div class="table-responsive">
+                <table class="vidomist-table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Дата</th>
+                            <th>Точка / Отримувач</th>
+                            <th>Категорія</th>
+                            <th>Тип ПММ</th>
+                            <th class="th-fuel">Літри (л)</th>
+                            <th class="th-oil">Кілограми (кг)</th>
+                            <th>Примітка / Документ</th>
+                            <th>Вніс</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblIncomeBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('wheel', function(e) {
+        if (document.activeElement && document.activeElement.type === 'number') {
+            document.activeElement.blur();
+        }
+    }, { passive: true });
+
+    const API_BASE = 'https://n8n.pmm-system.com/webhook/v4';
+    const API = {
+        init:          `${API_BASE}/refueler-init-data`,
+        saveFueling:   `${API_BASE}/save-fueling`,
+        getRows:       `${API_BASE}/get-vidomist-rows`,
+        deleteRow:     `${API_BASE}/delete-fueling-row`,
+        closeVidomist: `${API_BASE}/close-vidomist`,
+        waybillJournal:`${API_BASE}/waybill-journal`,
+        saveIncome:    `${API_BASE}/refueler-save-income`,
+        deleteIncome:  `${API_BASE}/refueler-delete-income`
+    };
+
+    let session = null;
+    let OVT_LOCAL_DB = [];
+    let ALL_REF_TYPES = [];
+    let INCOME_LIST = [];
+    let ALL_FUELING_RECORDS = [];
+    let activeWaybillsDL = [];
+    let activeWaybillsLRA = [];
+    let currentVidomostiList = [];
+    let periodsConfig = null;
+    
+    let activeFuels = ['ДП', 'АБ-80', 'АБ-92', 'АБ-95'];
+    let activeOils = ['10w40', '5w40', '15w40', 'М6з/10В', 'М-10Г2к', '5w30', '10w30', 'Селена', 'О - 1177'];
+    let activeLiquids = ['AdBlue'];
+    let nextDocNumber = '1';
+
+    let currentSheetRows = {};
+    let currentSelectedVidomistObj = null;
+    let isEditMode = false;
+    let editingRecordMeta = null;
+    let selectedVehicle = null;
+    let isExternalVehicle = false;
+    let currentActiveRecipient = '';
+    let resolvedDocNumberForOurVehicle = '';
+    let resolvedDriverPibForOurVehicle = '';
+    
+    let isCustomIncomeType = false;
+    let editIncomeId = null;
+
+    function isMasterUser() {
+        if (!session) return false;
+        const b = (session.bat || '').trim().toUpperCase();
+        const p = (session.point_name || '').trim().toUpperCase();
+        const l = (session.login || '').trim().toUpperCase();
+        return b === 'СПММ' || p === 'СПММ' || l === 'СПММ' || p === 'СКЛАД';
+    }
+
+    function getCleanBatCode(raw) {
+        if (!raw) return '';
+        const s = String(raw).toUpperCase().replace(/\s+/g, '');
+        if (s.includes('1БПС') || s.includes('1-ЙБПС')) return '1БПС';
+        if (s.includes('2БПС') || s.includes('2-ЙБПС')) return '2БПС';
+        if (s.includes('1ЛБ') || s.includes('1-ЙЛБ') || s.includes('1БАТ')) return '1ЛБ';
+        if (s.includes('2ЛБ') || s.includes('2-ЙЛБ') || s.includes('2БАТ')) return '2ЛБ';
+        if (s.includes('3ЛБ') || s.includes('3-ЙЛБ') || s.includes('3БАТ')) return '3ЛБ';
+        if (s.includes('4ЛБ') || s.includes('4-ЙЛБ') || s.includes('4БАТ')) return '4ЛБ';
+        if (s.includes('5ЛБ') || s.includes('5-ЙЛБ') || s.includes('5БАТ')) return '5ЛБ';
+        if (s.includes('УПР') || s.includes('СКЛАД')) return 'Упр';
+        if (s.includes('СПММ')) return 'СПММ';
+        return raw.trim();
+    }
+
+    function checkAuth() {
+        const stored = sessionStorage.getItem('pmm_refueler_session');
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (stored) {
+            session = JSON.parse(stored);
+        } else if (urlParams.get('point_name') && urlParams.get('login')) {
+            session = {
+                point_name: urlParams.get('point_name'),
+                bat: urlParams.get('bat') || '',
+                category: urlParams.get('category') || '',
+                month_key: urlParams.get('month_key') || '11_2026',
+                login: urlParams.get('login'),
+                pib: urlParams.get('login')
+            };
+            sessionStorage.setItem('pmm_refueler_session', JSON.stringify(session));
+        } else {
+            window.location.href = 'index_refueler.html';
+            return false;
+        }
+
+        session.bat = getCleanBatCode(session.bat || session.point_name || session.category);
+
+        document.getElementById('topPointTag').innerText = `Точка: ${session.point_name} (${session.bat})`;
+        document.getElementById('topUserTag').innerText = `Заправник: ${session.login} [${session.month_key}]`;
+        document.getElementById('prnPointName').innerText = `Пункт видачі: ${session.point_name}`;
+        
+        const today = new Date().toISOString().split('T')[0];
+        if (!document.getElementById('fDate').value) document.getElementById('fDate').value = today;
+        if (!document.getElementById('incDate').value) document.getElementById('incDate').value = today;
+
+        if (isMasterUser()) {
+            document.getElementById('boxFilterPoint').classList.remove('hidden');
+        }
+        return true;
+    }
+
+    function logoutRefueler() {
+        sessionStorage.removeItem('pmm_refueler_session');
+        window.location.href = 'index_refueler.html';
+    }
+
+    // Якщо в селекторі всього 1 реальна опція (напр. AdBlue для спецрідин) — підставляємо її при вводі літрів
+    function autoSelectSingleOption(selectId, val) {
+        const qty = parseFloat(val) || 0;
+        if (qty <= 0) return;
+        const sel = document.getElementById(selectId);
+        if (!sel || sel.value !== '') return;
+        const nonEmptyOpts = Array.from(sel.options).filter(o => o.value !== '');
+        if (nonEmptyOpts.length === 1) {
+            sel.value = nonEmptyOpts[0].value;
+            sel.style.borderColor = '';
+        }
+    }
+
+    function calculatePeriod(dateStr) {
+        if (!periodsConfig || !dateStr) return 'I';
+        const d = new Date(dateStr);
+        const roman = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+        for (let i = 10; i >= 1; i--) {
+            const key = `p_${i}_start`;
+            if (periodsConfig[key]) {
+                const pDate = new Date(periodsConfig[key].split('T')[0]);
+                if (d >= pDate) return roman[i];
+            }
+        }
+        return 'I';
+    }
+
+    function onDateChange(newDate) {
+        if (isExternalVehicle) {
+            document.getElementById('badgePeriod').innerText = 'Стороння в/ч (без періоду)';
+            document.getElementById('badgePeriod').style.background = '#475569';
+            return;
+        }
+        const p = calculatePeriod(newDate);
+        document.getElementById('badgePeriod').innerText = `Період: ${p}`;
+        document.getElementById('badgePeriod').style.background = '#0284c7';
+
+        if (selectedVehicle) {
+            updateWaybillSyncBanner(selectedVehicle, p);
+        }
+    }
+
+    function determineRecipient(veh) {
+        if (!veh) return '';
+        const point = (session.point_name || '').trim();
+        const isSklad = point.includes('Склад') || point.includes('СПММ');
+        const linearBats = ['1ЛБ', '2ЛБ', '3ЛБ', '4ЛБ', '5ЛБ', '1БПС', '2БПС'];
+        
+        if (isSklad) {
+            if (linearBats.includes(veh.bat)) {
+                return veh.bat;
+            }
+            return veh.pidrozdil;
+        } else {
+            const myBat = session.bat || '';
+            if (veh.bat && veh.bat !== myBat) {
+                return veh.bat;
+            }
+            return veh.pidrozdil;
+        }
+    }
+
+    function handleExtUnitInput(el) {
+        let digits = el.value.replace(/\D/g, '').slice(0, 4);
+        el.value = 'А' + digits;
+        updateVidomostiDropdown(el.value);
+    }
+
+    async function initApp() {
+        if (!checkAuth()) return;
+
+        try {
+            const url = `${API.init}?month_key=${encodeURIComponent(session.month_key)}&point_name=${encodeURIComponent(session.point_name)}&bat=${encodeURIComponent(session.bat)}`;
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const raw = await resp.json();
+                let res = raw.json || raw;
+                if (Array.isArray(res) && res.length > 0) res = res[0].json || res[0];
+
+                if (Array.isArray(res.vehicles)) {
+                    OVT_LOCAL_DB = res.vehicles.filter(v => v.ovt_it !== 'Причіп');
+                }
+
+                if (Array.isArray(res.subunits)) {
+                    window.SUBUNITS_LIST = res.subunits;
+                }
+
+                const vList = res.all_vidomosti || res.open_vidomosti || res.vidomosti || [];
+                currentVidomostiList = Array.isArray(vList) ? vList : [];
+
+                if (Array.isArray(res.income_records)) {
+                    INCOME_LIST = res.income_records;
+                }
+
+                if (Array.isArray(res.fueling_records)) {
+                    ALL_FUELING_RECORDS = res.fueling_records;
+                }
+
+                if (res.next_doc_number) {
+                    nextDocNumber = String(res.next_doc_number);
+                    document.getElementById('txtNewDocNumber').value = nextDocNumber;
+                }
+
+                if (res.periods) {
+                    periodsConfig = res.periods;
+                    onDateChange(document.getElementById('fDate').value);
+                }
+
+                if (Array.isArray(res.ref_types) && res.ref_types.length > 0) {
+                    ALL_REF_TYPES = res.ref_types;
+                    const activeOnly = res.ref_types.filter(t => t.is_active !== false);
+                    const f = activeOnly.filter(t => t.section === 'fuel').map(t => t.code);
+                    const o = activeOnly.filter(t => t.section === 'oil').map(t => t.code);
+                    const l = activeOnly.filter(t => t.section === 'liquid').map(t => t.code);
+
+                    if (f.length > 0) activeFuels = [...new Set(f)];
+                    if (o.length > 0) activeOils = [...new Set(o)];
+                    if (l.length > 0) activeLiquids = [...new Set(l)];
+                }
+
+                if (Array.isArray(res.open_waybills)) {
+                    activeWaybillsDL = res.open_waybills.filter(w => w.doc_type === 'ДЛ').map(w => ({
+                        id_ovt_it: w.id_ovt_it,
+                        period: w.period,
+                        nomer_dl: w.doc_number,
+                        driver_zvanya: w.zvanya,
+                        driver_pib: w.pib
+                    }));
+                    activeWaybillsLRA = res.open_waybills.filter(w => w.doc_type === 'ЛРА').map(w => ({
+                        id_ovt_it: w.id_ovt_it,
+                        period: w.period,
+                        nomer_lra: w.doc_number,
+                        operator_zvanya: w.zvanya,
+                        operator_pib: w.pib
+                    }));
+                } else {
+                    await loadActiveWaybillsForRefueler();
+                }
+            }
+        } catch (err) {
+            console.error('Помилка завантаження refueler-init-data:', err);
+        }
+
+        renderRefTypeDropdowns();
+        renderQuickUnitFilter();
+        renderJournalTableSkeleton();
+        initJournalFilters();
+        refreshJournalSelector();
+        renderIncomeTypeOptions();
+        renderIncomeTable();
+        initSummaryFilters();
+    }
+
+    async function loadActiveWaybillsForRefueler() {
+        try {
+            const [resDL, resLRA] = await Promise.all([
+                fetch(`${API.waybillJournal}?bat=ALL&type=${encodeURIComponent('ДЛ')}&month_key=${encodeURIComponent(session.month_key)}`),
+                fetch(`${API.waybillJournal}?bat=ALL&type=${encodeURIComponent('ЛРА')}&month_key=${encodeURIComponent(session.month_key)}`)
+            ]);
+            if (resDL.ok) {
+                const jDL = await resDL.json();
+                activeWaybillsDL = jDL.rows || [];
+            }
+            if (resLRA.ok) {
+                const jLRA = await resLRA.json();
+                activeWaybillsLRA = jLRA.rows || [];
+            }
+        } catch (e) {}
+    }
+
+    function renderRefTypeDropdowns() {
+        const selFuel = document.getElementById('selFuelCode');
+        const selOil = document.getElementById('selOilCode');
+        const selLiq = document.getElementById('selLiquidCode');
+
+        selFuel.innerHTML = '';
+        selOil.innerHTML = '<option value="">-- Оберіть марку оливи --</option>';
+        selLiq.innerHTML = '<option value="">-- Оберіть тип спецрідини --</option>';
+
+        activeFuels.forEach(code => selFuel.add(new Option(code, code)));
+        activeOils.forEach(code => selOil.add(new Option(code, code)));
+        activeLiquids.forEach(code => selLiq.add(new Option(code, code)));
+    }
+
+    function renderQuickUnitFilter() {
+        const sel = document.getElementById('selQuickUnitFilter');
+        const isMaster = isMasterUser();
+        const myBat = getCleanBatCode(session ? session.bat : '');
+
+        document.getElementById('lblQuickUnitFilter').innerText = isMaster
+            ? 'Швидкий фільтр за підрозділом (СПММ — вся в/ч)'
+            : `Підрозділ батальйону (${myBat})`;
+
+        sel.innerHTML = `<option value="ALL">${isMaster ? 'Усі підрозділи (вся в/ч)' : 'Всі підрозділи ' + myBat}</option>`;
+
+        let uniqueSubdivs = [];
+
+        if (isMaster) {
+            uniqueSubdivs = [...new Set(
+                OVT_LOCAL_DB
+                    .map(v => (v.pidrozdil || '').trim())
+                    .filter(Boolean)
+            )].sort();
+        } else {
+            uniqueSubdivs = [...new Set(
+                OVT_LOCAL_DB
+                    .filter(v => getCleanBatCode(v.bat) === myBat && v.pidrozdil)
+                    .map(v => v.pidrozdil.trim())
+                    .filter(Boolean)
+            )].sort();
+        }
+
+        uniqueSubdivs.forEach(sub => sel.add(new Option(sub, sub)));
+    }
+
+    function onQuickUnitFilterChange(subdiv) {
+        const inp = document.getElementById('vehInput');
+        showAutocompleteSuggestions(inp.value.trim());
+        inp.focus();
+    }
+
+    const vehInput = document.getElementById('vehInput');
+    const autoList = document.getElementById('autoList');
+
+    vehInput.addEventListener('focus', function() {
+        showAutocompleteSuggestions(vehInput.value.trim());
+    });
+
+    vehInput.addEventListener('input', function(e) {
+        showAutocompleteSuggestions(e.target.value.trim());
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-box') && !e.target.closest('#selQuickUnitFilter')) {
+            autoList.classList.add('hidden');
+        }
+    });
+
+    function showAutocompleteSuggestions(rawQuery) {
+        const val = (rawQuery || '').toLowerCase();
+        const unitFilter = document.getElementById('selQuickUnitFilter').value;
+        const isMaster = isMasterUser();
+        const myBat = getCleanBatCode(session ? session.bat : '');
+        autoList.innerHTML = '';
+        const matches = [];
+
+        OVT_LOCAL_DB.forEach(v => {
+            const vBat = getCleanBatCode(v.bat);
+            const vPidr = (v.pidrozdil || '').trim();
+
+            if (!isMaster && vBat !== myBat) {
+                if (!val) return;
+            }
+
+            if (unitFilter !== 'ALL' && vPidr !== unitFilter) return;
+
+            const num = String(v.viyskovyi_nomer || v.number || '').toLowerCase();
+            const marka = String(v.marka_tekhniky || v.marka || '').toLowerCase();
+
+            if (!val || num.includes(val) || marka.includes(val)) {
+                const isIT = (v.ovt_it === 'ІТ');
+                const icon = isIT ? '⚡' : '🚗';
+                matches.push({ 
+                    ...v,
+                    number: v.viyskovyi_nomer || v.number,
+                    label: `${icon} ${v.viyskovyi_nomer || v.number} — ${v.marka_tekhniky || v.marka} (${v.pidrozdil} / ${v.bat}, ${v.palne_typ || '-'})` 
+                });
+            }
+        });
+
+        if (matches.length > 0) {
+            matches.slice(0, 100).forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerText = m.label;
+                item.onclick = () => selectItem(m);
+                autoList.appendChild(item);
+            });
+
+            if (val) {
+                const extOption = document.createElement('div');
+                extOption.className = 'autocomplete-item';
+                extOption.style.color = '#38bdf8';
+                extOption.style.borderTop = '1px dashed #475569';
+                extOption.innerText = `🏢 Заправити сторонню військову частину (${val.toUpperCase()})`;
+                extOption.onclick = () => startExternalVehicle(val.toUpperCase());
+                autoList.appendChild(extOption);
+            }
+
+            autoList.classList.remove('hidden');
+        } else if (val) {
+            const itemErr = document.createElement('div');
+            itemErr.className = 'autocomplete-item';
+            itemErr.style.color = '#f87171';
+            itemErr.innerText = '❌ Номер не знайдено у штаті (очистити)';
+            itemErr.onclick = () => { clearSelectedVehicle(); };
+
+            const itemExt = document.createElement('div');
+            itemExt.className = 'autocomplete-item';
+            itemExt.style.color = '#38bdf8';
+            itemExt.style.fontWeight = '700';
+            itemExt.innerText = `🏢 Заправка іншої військової частини (${val.toUpperCase()})`;
+            itemExt.onclick = () => { startExternalVehicle(val.toUpperCase()); };
+
+            autoList.appendChild(itemErr);
+            autoList.appendChild(itemExt);
+            autoList.classList.remove('hidden');
+        } else {
+            autoList.classList.add('hidden');
+        }
+    }
+
+    function renderJournalTableSkeleton() {
+        const thead = document.getElementById('tableHead');
+        let tr1 = `
+            <tr>
+                <th rowspan="2" style="width:28px;">№<br>п/п</th>
+                <th rowspan="2">Номер<br>РВ</th>
+                <th rowspan="2">Марка і модель<br>ОВТ/ІТ</th>
+                <th rowspan="2">Номер<br>ОВТ/ІТ</th>
+                <th rowspan="2">Номер шляхового<br>або робочого листа</th>
+                <th colspan="${activeFuels.length}" class="th-fuel">Пальне (л)</th>
+                <th colspan="${activeOils.length}" class="th-oil">Оливи (л)</th>
+                <th colspan="${activeLiquids.length}" class="th-liquid">Рідини (л)</th>
+                <th rowspan="2">Дата</th>
+                <th rowspan="2" class="action-col no-print">Дії</th>
+            </tr>
+        `;
+
+        let tr2 = '<tr>';
+        activeFuels.forEach(f => { tr2 += `<th class="th-fuel">${f}</th>`; });
+        activeOils.forEach(o => { tr2 += `<th class="th-oil">${o}</th>`; });
+        activeLiquids.forEach(l => { tr2 += `<th class="th-liquid">${l}</th>`; });
+        tr2 += '</tr>';
+
+        thead.innerHTML = tr1 + tr2;
+    }
+
+    async function switchTab(tab, preferredVidId) {
+        document.getElementById('tabBtnEntry').classList.toggle('active', tab === 'entry');
+        document.getElementById('tabBtnJournal').classList.toggle('active', tab === 'journal');
+        document.getElementById('tabBtnSummary').classList.toggle('active', tab === 'summary');
+        document.getElementById('tabBtnIncome').classList.toggle('active', tab === 'income');
+
+        document.getElementById('viewEntry').classList.toggle('hidden', tab !== 'entry');
+        document.getElementById('viewJournal').classList.toggle('hidden', tab !== 'journal');
+        document.getElementById('viewSummary').classList.toggle('hidden', tab !== 'summary');
+        document.getElementById('viewIncome').classList.toggle('hidden', tab !== 'income');
+
+        if (tab === 'journal') {
+            refreshJournalSelector(preferredVidId);
+        } else if (tab === 'summary') {
+            if (!ALL_FUELING_RECORDS || ALL_FUELING_RECORDS.length === 0) {
+                await syncAllVidomostiForSummary();
+            } else {
+                initSummaryFilters();
+                renderSummaryView();
+            }
+        } else if (tab === 'income') {
+            renderIncomeTypeOptions();
+            renderIncomeTable();
+        }
+    }
+
+    function updateFuelOptions(palneTyp) {
+        const selFuel = document.getElementById('selFuelCode');
+        selFuel.innerHTML = '';
+
+        const typ = (palneTyp || '').toUpperCase();
+        if (typ.includes('ДП')) {
+            const dpFuels = activeFuels.filter(f => f === 'ДП' || f.includes('ДП'));
+            dpFuels.forEach(code => selFuel.add(new Option(code, code)));
+            if (dpFuels.length > 0) selFuel.value = dpFuels[0];
+        } else {
+            const abFuels = activeFuels.filter(f => f.startsWith('АБ') || f.startsWith('А'));
+            abFuels.forEach(code => selFuel.add(new Option(code, code)));
+            selFuel.value = abFuels.includes('АБ-80') ? 'АБ-80' : (abFuels[0] || 'АБ-80');
+        }
+    }
+
+    function startExternalVehicle(typedNumber) {
+        isExternalVehicle = true;
+        selectedVehicle = null;
+        autoList.classList.add('hidden');
+
+        document.getElementById('vehCard').classList.add('hidden');
+        document.getElementById('boxExternalVehicle').classList.remove('hidden');
+        document.getElementById('boxExternalDocAndDriver').classList.remove('hidden');
+
+        document.getElementById('txtExtVehNum').value = typedNumber || vehInput.value.trim().toUpperCase();
+        
+        const extUnitInput = document.getElementById('txtExtUnit');
+        extUnitInput.value = 'А';
+        document.getElementById('txtExtMarka').value = '';
+        document.getElementById('selExtFuelType').value = 'ДП';
+
+        document.getElementById('blockVidomist').classList.remove('hidden');
+        document.getElementById('blockFueling').classList.remove('hidden');
+
+        updateFuelOptions('ДП');
+        onDateChange(document.getElementById('fDate').value);
+        updateVidomostiDropdown('А');
+        
+        extUnitInput.focus();
+        extUnitInput.setSelectionRange(1, 1);
+    }
+
+    function onExtFuelTypeChange(val) {
+        updateFuelOptions(val);
+    }
+
+    function updateWaybillSyncBanner(item, period) {
+        const box = document.getElementById('boxWaybillSyncStatus');
+        const isIT = (item.ovt_it === 'ІТ');
+        const list = isIT ? activeWaybillsLRA : activeWaybillsDL;
+
+        const foundWb = list.find(w => w.id_ovt_it == item.id_ovt_it && w.period === period);
+        if (foundWb) {
+            const docNum = foundWb.nomer_dl || foundWb.nomer_lra || '';
+            const person = `${foundWb.driver_zvanya || foundWb.operator_zvanya || ''} ${foundWb.driver_pib || foundWb.operator_pib || ''}`.trim();
+            resolvedDocNumberForOurVehicle = docNum;
+            resolvedDriverPibForOurVehicle = person;
+
+            box.className = 'waybill-status-ok';
+            box.innerHTML = `🟢 <b>Відкритий ${isIT ? 'ЛРА' : 'ДЛ'} № ${docNum}</b> (Період ${period}) | ${isIT ? 'Відповідальний' : 'Водій'}: <b>${person || '-'}</b>`;
+        } else {
+            resolvedDocNumberForOurVehicle = '';
+            resolvedDriverPibForOurVehicle = '';
+
+            box.className = 'waybill-status-pencil';
+            box.innerHTML = `⚠️ <b>Увага: ще не відкрито ${isIT ? 'ЛРА' : 'ДЛ'} на цей період (${period}).</b><br>Заправка запишеться «на олівець» під номер <b>${item.number}</b> — номер листа підтягнеться у відомість автоматично після відкриття листа в батальйоні.`;
+        }
+    }
+
+    function selectItem(item) {
+        isExternalVehicle = false;
+        document.getElementById('boxExternalVehicle').classList.add('hidden');
+        document.getElementById('boxExternalDocAndDriver').classList.add('hidden');
+        autoList.classList.add('hidden');
+
+        vehInput.value = item.number;
+        selectedVehicle = item;
+
+        const card = document.getElementById('vehCard');
+        const bVid = document.getElementById('blockVidomist');
+        const bFuel = document.getElementById('blockFueling');
+
+        card.classList.remove('hidden');
+        bVid.classList.remove('hidden');
+        bFuel.classList.remove('hidden');
+
+        const recipient = determineRecipient(item);
+        document.getElementById('lblMarka').innerText = `${item.number} — ${item.marka_tekhniky || item.marka || ''}`;
+        document.getElementById('lblPidrozdil').innerText = `${item.pidrozdil} (${item.bat})`;
+        document.getElementById('lblRecipient').innerText = recipient;
+        
+        const rawType = item.palne_typ || item.fuel_type || 'ДП';
+        document.getElementById('lblFuelType').innerText = rawType;
+
+        const curPer = calculatePeriod(document.getElementById('fDate').value);
+        onDateChange(document.getElementById('fDate').value);
+        updateWaybillSyncBanner(item, curPer);
+
+        updateFuelOptions(rawType);
+        updateVidomostiDropdown(recipient);
+    }
+
+    function updateVidomostiDropdown(recipient) {
+        currentActiveRecipient = recipient || '';
+        const sel = document.getElementById('selVidomist');
+        sel.innerHTML = '';
+
+        const availableList = currentVidomostiList.filter(v => 
+            v.komu === recipient && 
+            !v.is_closed && 
+            (Number(v.current_rows || 0) < Number(v.max_rows || 15))
+        );
+
+        const currentLogin = (session && session.login) ? session.login.trim() : '';
+        const isMaster = isMasterUser();
+
+        const myList = availableList.filter(v => isMaster || (v.created_by || '').trim() === currentLogin);
+        const otherList = availableList.filter(v => !isMaster && (v.created_by || '').trim() !== currentLogin);
+
+        if (myList.length > 0) {
+            myList.forEach(v => {
+                const cur = v.current_rows || 0;
+                const max = v.max_rows || 15;
+                sel.add(new Option(`Відомість № ${v.doc_number} [Моя, вільних: ${max - cur} з ${max}]`, v.id));
+            });
+
+            const newLabel = recipient ? `➕ Створити нову відомість для ${recipient}` : `➕ Створити нову відомість`;
+            sel.add(new Option(newLabel, 'new'));
+
+            otherList.forEach(v => {
+                const cur = v.current_rows || 0;
+                const max = v.max_rows || 15;
+                const creator = v.created_by ? v.created_by.trim() : 'інший';
+                sel.add(new Option(`Відомість № ${v.doc_number} [Заправник: ${creator}, вільних: ${max - cur} з ${max}]`, v.id));
+            });
+
+            sel.value = myList[0].id;
+        } else {
+            const newLabel = recipient ? `➕ Створити нову відомість для ${recipient}` : `➕ Створити нову відомість`;
+            sel.add(new Option(newLabel, 'new'));
+
+            otherList.forEach(v => {
+                const cur = v.current_rows || 0;
+                const max = v.max_rows || 15;
+                const creator = v.created_by ? v.created_by.trim() : 'інший';
+                sel.add(new Option(`Відомість № ${v.doc_number} [Заправник: ${creator}, вільних: ${max - cur} з ${max}]`, v.id));
+            });
+
+            sel.value = 'new';
+        }
+
+        onVidomistSelectChange(sel.value);
+    }
+
+    function onVidomistSelectChange(val) {
+        const boxNew = document.getElementById('boxNewVidomistFields');
+        if (val === 'new') {
+            boxNew.classList.remove('hidden');
+            document.getElementById('txtNewDocNumber').value = nextDocNumber;
+        } else {
+            boxNew.classList.add('hidden');
+        }
+    }
+
+    function clearSelectedVehicle() {
+        resetVehicleForm();
+        vehInput.focus();
+    }
+
+    function resetVehicleForm() {
+        selectedVehicle = null;
+        isExternalVehicle = false;
+        isEditMode = false;
+        editingRecordMeta = null;
+        resolvedDocNumberForOurVehicle = '';
+        resolvedDriverPibForOurVehicle = '';
+
+        vehInput.value = '';
+        document.getElementById('selQuickUnitFilter').value = 'ALL';
+        document.getElementById('txtDocNumber').value = '';
+        document.getElementById('txtDriver').value = '';
+        document.getElementById('txtExtUnit').value = 'А';
+        document.getElementById('txtExtVehNum').value = '';
+        document.getElementById('txtExtMarka').value = '';
+        document.getElementById('numFuelQty').value = '';
+        document.getElementById('numOilQty').value = '';
+        document.getElementById('numLiquidQty').value = '';
+        document.getElementById('selOilCode').value = '';
+        document.getElementById('selLiquidCode').value = '';
+        document.getElementById('selOilCode').style.borderColor = '';
+        document.getElementById('selLiquidCode').style.borderColor = '';
+
+        document.getElementById('editBanner').classList.add('hidden');
+        document.getElementById('btnSubmitFueling').innerText = 'Зберегти заправку';
+
+        document.getElementById('vehCard').classList.add('hidden');
+        document.getElementById('boxExternalVehicle').classList.add('hidden');
+        document.getElementById('boxExternalDocAndDriver').classList.add('hidden');
+        document.getElementById('blockVidomist').classList.add('hidden');
+        document.getElementById('blockFueling').classList.add('hidden');
+        document.getElementById('boxNewVidomistFields').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // ЛОГІКА ВКЛАДКИ «📊 ЗВЕДЕНІ ВІДОМОСТІ (АНАЛІТИКА ЗАПРАВОК)»
+    // =========================================================================
+    async function syncAllVidomostiForSummary() {
+        const statusEl = document.getElementById('lblSummaryLoadStatus');
+        statusEl.innerText = '⏳ Отримання та звірка рядків усіх роздавальних відомостей...';
+
+        const collected = [];
+        const listToScan = currentVidomostiList || [];
+
+        const promises = listToScan.map(async (vid) => {
+            try {
+                const resp = await fetch(API.getRows, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vidomist_id: vid.id })
+                });
+                if (!resp.ok) return;
+                const raw = await resp.json();
+                let res = raw.json || raw;
+                if (Array.isArray(res) && res.length > 0) res = res[0].json || res[0];
+                const header = res.header || vid;
+                const rows = res.rows || [];
+
+                rows.forEach(r => {
+                    const q = Number(r.quantity) || 0;
+                    if (q <= 0) return;
+
+                    const foundVeh = OVT_LOCAL_DB.find(v => v.id_ovt_it == r.id_ovt_it || (v.viyskovyi_nomer || v.number) === r.number);
+                    const t = r.item_type || '';
+                    let cat = r.category || '';
+                    if (!cat) {
+                        if (activeFuels.includes(t)) cat = 'fuel';
+                        else if (activeOils.includes(t)) cat = 'oil';
+                        else cat = 'liquid';
+                    }
+
+                    collected.push({
+                        vidomist_id: header.id || vid.id,
+                        vidomist_num: header.doc_number || vid.doc_number,
+                        point_name: header.vid_kogo || vid.vid_kogo || session.point_name,
+                        recipient: header.komu || vid.komu || '-',
+                        is_closed: Boolean(header.is_closed ?? vid.is_closed),
+                        row_no: r.row_no,
+                        date: r.date || '',
+                        period: r.period || calculatePeriod(r.date),
+                        id_ovt_it: r.id_ovt_it || null,
+                        number: r.number || '-',
+                        marka: r.marka || (foundVeh ? foundVeh.marka_tekhniky : '-'),
+                        bat: foundVeh ? getCleanBatCode(foundVeh.bat) : (header.komu || '-'),
+                        pidrozdil: foundVeh ? (foundVeh.pidrozdil || header.komu) : (header.komu || '-'),
+                        dl: r.dl || '',
+                        category: cat,
+                        item_type: t,
+                        quantity: q,
+                        created_by: r.created_by || header.created_by || ''
+                    });
+                });
+            } catch (e) {}
+        });
+
+        await Promise.all(promises);
+        ALL_FUELING_RECORDS = collected;
+        statusEl.innerText = `✅ Проаналізовано відомостей: ${listToScan.length} шт. | Записів видачі ПММ: ${ALL_FUELING_RECORDS.length}`;
+        initSummaryFilters();
+        renderSummaryView();
+    }
+
+    function initSummaryFilters() {
+        const selPoint = document.getElementById('sumFilterPoint');
+        const selRec = document.getElementById('sumFilterRecipient');
+        const selType = document.getElementById('sumFilterItemType');
+
+        const prevPoint = selPoint.value || 'ALL';
+        const prevRec = selRec.value || 'ALL';
+        const prevType = selType.value || 'ALL';
+
+        const points = [...new Set([
+            ...currentVidomostiList.map(v => v.vid_kogo),
+            ...ALL_FUELING_RECORDS.map(r => r.point_name)
+        ].filter(Boolean))].sort();
+
+        selPoint.innerHTML = '<option value="ALL">Усі точки видачі</option>';
+        points.forEach(p => selPoint.add(new Option(p, p)));
+        if (points.includes(prevPoint)) selPoint.value = prevPoint;
+
+        const recipients = [...new Set([
+            ...currentVidomostiList.map(v => v.komu),
+            ...ALL_FUELING_RECORDS.map(r => r.recipient),
+            ...ALL_FUELING_RECORDS.map(r => r.pidrozdil)
+        ].filter(Boolean))].sort();
+
+        selRec.innerHTML = '<option value="ALL">Усі одержувачі / підрозділи</option>';
+        recipients.forEach(r => selRec.add(new Option(r, r)));
+        if (recipients.includes(prevRec)) selRec.value = prevRec;
+
+        selType.innerHTML = `
+            <option value="ALL">Усі види ПММ (Пальне + Оливи + Рідини)</option>
+            <option value="CAT_FUEL">⛽ Тільки Пальне (усі марки)</option>
+            <option value="CAT_OIL">🛢️ Тільки Оливи (усі марки)</option>
+            <option value="CAT_LIQUID">💧 Тільки Спецрідини</option>
+        `;
+        const usedTypes = [...new Set(ALL_FUELING_RECORDS.map(r => r.item_type).filter(Boolean))];
+        if (usedTypes.length > 0) {
+            const grp = document.createElement('optgroup');
+            grp.label = 'Конкретна марка майна';
+            usedTypes.forEach(t => grp.appendChild(new Option(`Марка: ${t}`, t)));
+            selType.appendChild(grp);
+        }
+        if (Array.from(selType.options).some(o => o.value === prevType)) selType.value = prevType;
+    }
+
+    function getFilteredSummaryRecords() {
+        const fPoint = document.getElementById('sumFilterPoint').value;
+        const fRec = document.getElementById('sumFilterRecipient').value;
+        const fPer = document.getElementById('sumFilterPeriod').value;
+        const fType = document.getElementById('sumFilterItemType').value;
+        const fStatus = document.getElementById('sumFilterStatus').value;
+        const q = (document.getElementById('sumSearchInput').value || '').trim().toLowerCase();
+
+        return (ALL_FUELING_RECORDS || []).filter(r => {
+            if (fPoint !== 'ALL' && r.point_name !== fPoint) return false;
+            if (fRec !== 'ALL' && r.recipient !== fRec && r.pidrozdil !== fRec && r.bat !== fRec) return false;
+            const recPer = r.period || calculatePeriod(r.date);
+            if (fPer !== 'ALL' && recPer !== fPer) return false;
+
+            if (fStatus === 'open' && r.is_closed) return false;
+            if (fStatus === 'closed' && !r.is_closed) return false;
+
+            const isFuel = r.category === 'fuel' || activeFuels.includes(r.item_type);
+            const isOil = r.category === 'oil' || activeOils.includes(r.item_type);
+            const isLiq = r.category === 'liquid' || activeLiquids.includes(r.item_type);
+
+            if (fType === 'CAT_FUEL' && !isFuel) return false;
+            if (fType === 'CAT_OIL' && !isOil) return false;
+            if (fType === 'CAT_LIQUID' && !isLiq) return false;
+            if (fType !== 'ALL' && !fType.startsWith('CAT_') && r.item_type !== fType) return false;
+
+            if (q) {
+                const hay = `${r.vidomist_num} ${r.recipient} ${r.pidrozdil} ${r.bat} ${r.number} ${r.marka} ${r.dl} ${r.item_type} ${r.point_name}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+    }
+
+    function fmtNum(val) {
+        const n = Number(val || 0);
+        if (n === 0) return '';
+        return Number(n.toFixed(1)).toString();
+    }
+
+    function renderSummaryView() {
+        const records = getFilteredSummaryRecords();
+        const mode = document.getElementById('sumGroupMode').value;
+
+        let totDp = 0, totAb = 0, totOil = 0, totLiq = 0;
+        const uniqueRowsSet = new Set();
+        const uniqueVidsSet = new Set();
+
+        records.forEach(r => {
+            const q = Number(r.quantity) || 0;
+            const t = (r.item_type || '').toUpperCase();
+            uniqueRowsSet.add(`${r.vidomist_id}_${r.row_no}`);
+            uniqueVidsSet.add(r.vidomist_id);
+
+            if (t.includes('ДП')) totDp += q;
+            else if (t.startsWith('АБ') || t.startsWith('А-')) totAb += q;
+            else if (r.category === 'oil' || activeOils.includes(r.item_type)) totOil += q;
+            else totLiq += q;
+        });
+
+        document.getElementById('summaryKpiGrid').innerHTML = `
+            <div class="kpi-card" style="border-left: 4px solid #38bdf8;">
+                <div class="kpi-title">⛽ Дизельне пальне (ДП)</div>
+                <div class="kpi-val" style="color:#38bdf8;">${Math.round(totDp)} л</div>
+                <div class="kpi-sub">За обраними фільтрами</div>
+            </div>
+            <div class="kpi-card" style="border-left: 4px solid #a78bfa;">
+                <div class="kpi-title">⛽ Автобензини (АБ-80 / 92 / 95)</div>
+                <div class="kpi-val" style="color:#a78bfa;">${Math.round(totAb)} л</div>
+                <div class="kpi-sub">Сумарно по всіх марках АБ</div>
+            </div>
+            <div class="kpi-card" style="border-left: 4px solid #fde047;">
+                <div class="kpi-title">🛢️ Оливи та мастила</div>
+                <div class="kpi-val" style="color:#fde047;">${Number(totOil.toFixed(1))} л</div>
+                <div class="kpi-sub">Усі марки моторних/трансм. олив</div>
+            </div>
+            <div class="kpi-card" style="border-left: 4px solid #86efac;">
+                <div class="kpi-title">💧 Спецрідини / Заправок</div>
+                <div class="kpi-val" style="color:#86efac;">${Number(totLiq.toFixed(1))} л</div>
+                <div class="kpi-sub">Заправок: <b>${uniqueRowsSet.size}</b> у <b>${uniqueVidsSet.size}</b> РВ</div>
+            </div>
+        `;
+
+        const usedFuels = activeFuels.filter(f => records.some(r => r.item_type === f));
+        const usedOils = activeOils.filter(o => records.some(r => r.item_type === o));
+        const usedLiqs = activeLiquids.filter(l => records.some(r => r.item_type === l));
+
+        const fCols = usedFuels.length > 0 ? usedFuels : ['ДП', 'АБ-80', 'АБ-95'];
+        const oCols = usedOils.length > 0 ? usedOils : ['10w40', '15w40'];
+        const lCols = usedLiqs.length > 0 ? usedLiqs : ['AdBlue'];
+        const allCols = [...fCols, ...oCols, ...lCols];
+
+        const thead = document.getElementById('tblSummaryHead');
+        const tbody = document.getElementById('tblSummaryBody');
+        const tfoot = document.getElementById('tblSummaryFoot');
+
+        let leftHeaders = '';
+        if (mode === 'recipient') {
+            leftHeaders = `
+                <th rowspan="2">№</th>
+                <th rowspan="2">Одержувач / Підрозділ</th>
+                <th rowspan="2">Батальйон</th>
+                <th rowspan="2">К-сть РВ</th>
+                <th rowspan="2">К-сть заправок</th>
+            `;
+        } else if (mode === 'vidomist') {
+            leftHeaders = `
+                <th rowspan="2">№</th>
+                <th rowspan="2">№ РВ (Накладна)</th>
+                <th rowspan="2">Точка видачі</th>
+                <th rowspan="2">Одержувач (Кому)</th>
+                <th rowspan="2">Статус</th>
+                <th rowspan="2">Рядків</th>
+            `;
+        } else {
+            leftHeaders = `
+                <th rowspan="2">№</th>
+                <th rowspan="2">Військ. номер</th>
+                <th rowspan="2">Марка техніки</th>
+                <th rowspan="2">Підрозділ / Бат</th>
+                <th rowspan="2">Номери РВ</th>
+                <th rowspan="2">Заправок</th>
+            `;
+        }
+
+        let tr1 = `
+            <tr>
+                ${leftHeaders}
+                <th colspan="${fCols.length}" class="th-fuel">Пальне (л)</th>
+                <th colspan="${oCols.length}" class="th-oil">Оливи (л)</th>
+                <th colspan="${lCols.length}" class="th-liquid">Спецрідини (л)</th>
+                <th rowspan="2" class="th-fuel">ВСЬОГО ПАЛЬНОГО (л)</th>
+            </tr>
+        `;
+        let tr2 = '<tr>';
+        fCols.forEach(c => { tr2 += `<th class="th-fuel">${c}</th>`; });
+        oCols.forEach(c => { tr2 += `<th class="th-oil">${c}</th>`; });
+        lCols.forEach(c => { tr2 += `<th class="th-liquid">${c}</th>`; });
+        tr2 += '</tr>';
+        thead.innerHTML = tr1 + tr2;
+
+        const groupsMap = new Map();
+
+        records.forEach(r => {
+            let key = '';
+            if (mode === 'recipient') key = `${r.recipient || r.pidrozdil}`;
+            else if (mode === 'vidomist') key = `VID_${r.vidomist_id}`;
+            else key = `VEH_${r.number}_${r.marka}`;
+
+            if (!groupsMap.has(key)) {
+                groupsMap.set(key, {
+                    key: key,
+                    vidomist_id: r.vidomist_id,
+                    vidomist_num: r.vidomist_num,
+                    point_name: r.point_name,
+                    recipient: r.recipient || r.pidrozdil || '-',
+                    bat: r.bat || '-',
+                    pidrozdil: r.pidrozdil || '-',
+                    is_closed: r.is_closed,
+                    number: r.number || '-',
+                    marka: r.marka || '-',
+                    vidsSet: new Set(),
+                    rowsSet: new Set(),
+                    totals: {},
+                    totalFuelRow: 0
+                });
+            }
+
+            const g = groupsMap.get(key);
+            g.vidsSet.add(r.vidomist_num);
+            g.rowsSet.add(`${r.vidomist_id}_${r.row_no}`);
+            g.totals[r.item_type] = (g.totals[r.item_type] || 0) + (Number(r.quantity) || 0);
+            if (fCols.includes(r.item_type) || r.category === 'fuel') {
+                g.totalFuelRow += (Number(r.quantity) || 0);
+            }
+        });
+
+        const groupsList = Array.from(groupsMap.values());
+        const infoColsCount = (mode === 'recipient') ? 5 : 6;
+
+        if (groupsList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${infoColsCount + allCols.length + 1}" style="padding:20px; color:#94a3b8;">За обраними фільтрами записів заправок не знайдено.</td></tr>`;
+            tfoot.innerHTML = '';
+            return;
+        }
+
+        const grandTotals = {};
+        allCols.forEach(c => { grandTotals[c] = 0; });
+        let grandFuelSum = 0;
+
+        tbody.innerHTML = groupsList.map((g, idx) => {
+            let itemCells = '';
+            allCols.forEach(c => {
+                const val = g.totals[c] || 0;
+                grandTotals[c] += val;
+                itemCells += `<td><b>${fmtNum(val)}</b></td>`;
+            });
+            grandFuelSum += g.totalFuelRow;
+
+            if (mode === 'recipient') {
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td style="text-align:left;"><b style="color:#fde047;">${g.recipient}</b></td>
+                        <td><b>${g.bat}</b></td>
+                        <td>${g.vidsSet.size}</td>
+                        <td>${g.rowsSet.size}</td>
+                        ${itemCells}
+                        <td style="color:#38bdf8; font-weight:800;">${fmtNum(g.totalFuelRow) || '0'} л</td>
+                    </tr>
+                `;
+            } else if (mode === 'vidomist') {
+                const stBadge = g.is_closed
+                    ? '<span style="color:#94a3b8;">🔒 Закрита</span>'
+                    : '<span style="color:#10b981;">🟢 Відкрита</span>';
+                return `
+                    <tr onclick="switchTab('journal', ${g.vidomist_id})" title="Клікніть, щоб відкрити цю відомість у Журналі роздавальних">
+                        <td>${idx + 1}</td>
+                        <td><b style="color:#38bdf8; text-decoration:underline;">РВ № ${g.vidomist_num}</b></td>
+                        <td>${g.point_name}</td>
+                        <td><b style="color:#fde047;">${g.recipient}</b></td>
+                        <td>${stBadge}</td>
+                        <td>${g.rowsSet.size}</td>
+                        ${itemCells}
+                        <td style="color:#38bdf8; font-weight:800;">${fmtNum(g.totalFuelRow) || '0'} л</td>
+                    </tr>
+                `;
+            } else {
+                const vidsStr = Array.from(g.vidsSet).map(n => `№${n}`).join(', ');
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><b style="color:#38bdf8;">${g.number}</b></td>
+                        <td style="text-align:left;">${g.marka}</td>
+                        <td><b>${g.pidrozdil}</b> (${g.bat})</td>
+                        <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="${vidsStr}">${vidsStr}</td>
+                        <td>${g.rowsSet.size}</td>
+                        ${itemCells}
+                        <td style="color:#38bdf8; font-weight:800;">${fmtNum(g.totalFuelRow) || '0'} л</td>
+                    </tr>
+                `;
+            }
+        }).join('');
+
+        let footCells = '';
+        allCols.forEach(c => {
+            footCells += `<td>${fmtNum(grandTotals[c]) || '0'}</td>`;
+        });
+
+        tfoot.innerHTML = `
+            <tr class="total-row">
+                <td colspan="${infoColsCount}" style="text-align:right; padding-right:12px;">ВСЬОГО ЗА ОБРАНИМИ ФІЛЬТРАМИ:</td>
+                ${footCells}
+                <td style="color:#34d399; font-size:0.9rem;">${fmtNum(grandFuelSum) || '0'} л</td>
+            </tr>
+        `;
+    }
+
+    // =========================================================================
+    // ЛОГІКА ВКЛАДКИ «📥 НАДХОДЖЕННЯ ПММ»
+    // =========================================================================
+    function renderIncomeTypeOptions() {
+        const sec = document.getElementById('incSection').value;
+        const sel = document.getElementById('incTypeSelect');
+        sel.innerHTML = '';
+
+        const bySection = (ALL_REF_TYPES || []).filter(t => t.section === sec);
+        const activeItems = bySection.filter(t => t.is_active !== false);
+        const inactiveItems = bySection.filter(t => t.is_active === false);
+
+        if (activeItems.length > 0) {
+            const grpAct = document.createElement('optgroup');
+            grpAct.label = '🟢 Активні типи майна';
+            activeItems.forEach(t => grpAct.appendChild(new Option(t.code, t.code)));
+            sel.appendChild(grpAct);
+        }
+
+        if (inactiveItems.length > 0) {
+            const grpInact = document.createElement('optgroup');
+            grpInact.label = '⚪ Інші типи з довідника ref_type';
+            inactiveItems.forEach(t => grpInact.appendChild(new Option(t.code, t.code)));
+            sel.appendChild(grpInact);
+        }
+
+        if (sel.options.length === 0) {
+            const defaults = (sec === 'fuel') ? activeFuels : (sec === 'oil' ? activeOils : activeLiquids);
+            defaults.forEach(c => sel.add(new Option(c, c)));
+        }
+    }
+
+    function toggleCustomIncType() {
+        isCustomIncomeType = !isCustomIncomeType;
+        const sel = document.getElementById('incTypeSelect');
+        const inp = document.getElementById('incTypeCustom');
+        const btn = document.getElementById('btnToggleCustomIncType');
+
+        if (isCustomIncomeType) {
+            sel.classList.add('hidden');
+            inp.classList.remove('hidden');
+            btn.innerText = '↩️ Зі списку';
+            inp.focus();
+        } else {
+            sel.classList.remove('hidden');
+            inp.classList.add('hidden');
+            btn.innerText = '+ Ввести вручну';
+        }
+    }
+
+    async function saveIncomeRecord() {
+        const date = document.getElementById('incDate').value;
+        const section = document.getElementById('incSection').value;
+        const itemType = isCustomIncomeType
+            ? document.getElementById('incTypeCustom').value.trim()
+            : document.getElementById('incTypeSelect').value;
+
+        const litersRaw = document.getElementById('incLiters').value;
+        const kgRaw = document.getElementById('incKg').value;
+        const liters = litersRaw !== '' ? parseFloat(litersRaw) : null;
+        const kg = kgRaw !== '' ? parseFloat(kgRaw) : null;
+        const note = document.getElementById('incDocNote').value.trim();
+
+        if (!date) {
+            alert('Вкажіть дату надходження!');
+            return;
+        }
+        if (!itemType) {
+            alert('Оберіть або введіть тип майна!');
+            return;
+        }
+        if ((liters === null || liters <= 0) && (kg === null || kg <= 0)) {
+            alert('Вкажіть кількість літрів АБО кілограмів (хоча б одне поле)!');
+            return;
+        }
+
+        const btn = document.getElementById('btnSaveIncome');
+        btn.disabled = true;
+        btn.innerText = 'Збереження...';
+
+        try {
+            const resp = await fetch(API.saveIncome, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: editIncomeId,
+                    month_key: session.month_key,
+                    point_name: session.point_name,
+                    bat: session.bat,
+                    date: date,
+                    section: section,
+                    item_type: itemType,
+                    is_custom_type: isCustomIncomeType,
+                    liters: liters,
+                    kg: kg,
+                    doc_note: note,
+                    created_by: session.login
+                })
+            });
+
+            if (resp.ok) {
+                document.getElementById('incLiters').value = '';
+                document.getElementById('incKg').value = '';
+                document.getElementById('incDocNote').value = '';
+                if (isCustomIncomeType) {
+                    document.getElementById('incTypeCustom').value = '';
+                    toggleCustomIncType();
+                }
+                
+                const wasEdit = editIncomeId !== null;
+                editIncomeId = null;
+                document.getElementById('editIncBanner').classList.add('hidden');
+                
+                await initApp();
+                alert(wasEdit ? 'Надходження успішно оновлено!' : 'Надходження ПММ успішно збережено!');
+            } else {
+                alert('Помилка збереження надходження.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання із сервером.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '📥 Зберегти надходження ПММ';
+        }
+    }
+
+    function renderIncomeTable() {
+        const tbody = document.getElementById('tblIncomeBody');
+        if (!INCOME_LIST || INCOME_LIST.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="padding:16px; color:#94a3b8;">Записів надходжень у цьому місяці ще немає.</td></tr>';
+            return;
+        }
+
+        const secNames = { fuel: '⛽ Пальне', oil: '🛢️ Олива', liquid: '💧 Рідина' };
+        tbody.innerHTML = INCOME_LIST.map((r, idx) => `
+            <tr ondblclick="editIncomeRecord(${r.id})" title="Подвійний клік — редагувати">
+                <td>${idx + 1}</td>
+                <td>${r.date || '-'}</td>
+                <td><b>${r.point_name || '-'}</b> (${r.bat || ''})</td>
+                <td>${secNames[r.section] || r.section}</td>
+                <td><b style="color:#38bdf8;">${r.item_type}</b></td>
+                <td><b>${r.liters !== null && r.liters !== undefined ? r.liters + ' л' : '-'}</b></td>
+                <td><b>${r.kg !== null && r.kg !== undefined ? r.kg + ' кг' : '-'}</b></td>
+                <td style="text-align:left;">${r.doc_note || '-'}</td>
+                <td>${r.created_by || '-'}</td>
+                <td class="action-col">
+                    <button class="btn-sm btn-secondary" onclick="event.stopPropagation(); editIncomeRecord(${r.id})">✏️</button>
+                    <button class="btn-sm btn-danger" onclick="event.stopPropagation(); deleteIncomeRecord(${r.id})">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function editIncomeRecord(id) {
+        const r = INCOME_LIST.find(x => x.id === id);
+        if (!r) return;
+
+        editIncomeId = r.id;
+        document.getElementById('editIncBanner').classList.remove('hidden');
+        document.getElementById('btnSaveIncome').innerText = '💾 Оновити запис надходження';
+
+        document.getElementById('incDate').value = r.date;
+        document.getElementById('incSection').value = r.section;
+        renderIncomeTypeOptions();
+
+        const sel = document.getElementById('incTypeSelect');
+        if (Array.from(sel.options).some(o => o.value === r.item_type)) {
+            if (isCustomIncomeType) toggleCustomIncType();
+            sel.value = r.item_type;
+        } else {
+            if (!isCustomIncomeType) toggleCustomIncType();
+            document.getElementById('incTypeCustom').value = r.item_type;
+        }
+
+        document.getElementById('incLiters').value = r.liters !== null ? r.liters : '';
+        document.getElementById('incKg').value = r.kg !== null ? r.kg : '';
+        document.getElementById('incDocNote').value = r.doc_note || '';
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditIncome() {
+        editIncomeId = null;
+        document.getElementById('editIncBanner').classList.add('hidden');
+        document.getElementById('btnSaveIncome').innerText = '📥 Зберегти надходження ПММ';
+        
+        document.getElementById('incLiters').value = '';
+        document.getElementById('incKg').value = '';
+        document.getElementById('incDocNote').value = '';
+        if (isCustomIncomeType) toggleCustomIncType();
+    }
+
+    async function deleteIncomeRecord(id) {
+        if (!confirm('Видалити цей запис надходження?')) return;
+        try {
+            const resp = await fetch(API.deleteIncome, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            if (resp.ok) {
+                if (editIncomeId === id) cancelEditIncome();
+                await initApp();
+            }
+        } catch (e) {
+            alert('Помилка видалення.');
+        }
+    }
+
+    // =========================================================================
+    // ЖУРНАЛ РОЗДАВАЛЬНИХ
+    // =========================================================================
+    function initJournalFilters() {
+        const selPoint = document.getElementById('selFilterPoint');
+        const selRec = document.getElementById('selFilterRecipient');
+
+        if (isMasterUser()) {
+            selPoint.innerHTML = '<option value="all">Усі точки видачі</option>';
+            const points = [...new Set(currentVidomostiList.map(v => v.vid_kogo).filter(Boolean))].sort();
+            points.forEach(p => selPoint.add(new Option(p, p)));
+        }
+
+        selRec.innerHTML = '<option value="all">Усі одержувачі</option>';
+        const recipients = [...new Set(currentVidomostiList.map(v => v.komu).filter(Boolean))].sort();
+        recipients.forEach(r => selRec.add(new Option(r, r)));
+    }
+
+    function applyJournalFilters() {
+        refreshJournalSelector();
+    }
+
+    function getFilteredVidomosti() {
+        let list = [...currentVidomostiList];
+        
+        if (isMasterUser()) {
+            const p = document.getElementById('selFilterPoint').value;
+            if (p && p !== 'all') {
+                list = list.filter(v => v.vid_kogo === p);
+            }
+        }
+
+        const r = document.getElementById('selFilterRecipient').value;
+        if (r && r !== 'all') {
+            list = list.filter(v => v.komu === r);
+        }
+
+        const s = document.getElementById('selFilterStatus').value;
+        if (s === 'open') list = list.filter(v => !v.is_closed);
+        else if (s === 'closed') list = list.filter(v => v.is_closed);
+
+        return list;
+    }
+
+    function refreshJournalSelector(preferredVidId) {
+        const sel = document.getElementById('selJournalVidomist');
+        const prevVal = preferredVidId || sel.value;
+        sel.innerHTML = '';
+
+        const filteredList = getFilteredVidomosti();
+
+        if (filteredList.length === 0) {
+            sel.add(new Option('-- Відомостей за фільтром не знайдено --', ''));
+            document.getElementById('prnDocTitle').innerText = 'РОЗДАВАЛЬНА ВІДОМІСТЬ № ___';
+            document.getElementById('prnRegTitle').innerText = `Реєстраційний № ___ | Місяць: ${session.month_key}`;
+            document.getElementById('prnKomu').innerText = '-';
+            document.getElementById('tableBodyRows').innerHTML = '<tr><td colspan="20" style="padding: 20px; color: #94a3b8;">Не знайдено роздавальних відомостей під вибрані параметри фільтра.</td></tr>';
+            document.getElementById('tableFoot').innerHTML = '';
+            return;
+        }
+
+        const currentLogin = (session && session.login) ? session.login.trim() : '';
+        const isMaster = isMasterUser();
+
+        filteredList.forEach(v => {
+            const status = v.is_closed ? '🔒 Закрита' : '🟢 Відкрита';
+            const cur = v.current_rows || 0;
+            const max = v.max_rows || 15;
+            const isMine = (v.created_by && v.created_by.trim() === currentLogin);
+            const authorTag = isMaster ? `[${v.vid_kogo}]` : (isMine ? 'Моя' : `Заправник: ${v.created_by || 'інший'}`);
+            sel.add(new Option(`Відомість № ${v.doc_number} — ${v.komu} [${cur}/${max}] (${authorTag}) (${status})`, v.id));
+        });
+
+        if (prevVal && Array.from(sel.options).some(o => o.value == prevVal)) {
+            sel.value = prevVal;
+        }
+
+        loadVidomistDetails(sel.value || filteredList[0].id);
+    }
+
+    async function loadVidomistDetails(vidomistId) {
+        if (!vidomistId) return;
+
+        currentSheetRows = {};
+        for (let r = 1; r <= 15; r++) {
+            currentSheetRows[r] = { row_no: r, marka: '', number: '', dl: '', date: '', id_ovt_it: null, driver_pib: '', created_by: '', fuels: {} };
+        }
+
+        try {
+            const resp = await fetch(API.getRows, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vidomist_id: vidomistId })
+            });
+
+            if (resp.ok) {
+                const raw = await resp.json();
+                let res = raw.json || raw;
+                if (Array.isArray(res) && res.length > 0) res = res[0].json || res[0];
+
+                const header = res.header || {};
+                const rows = res.rows || [];
+
+                currentSelectedVidomistObj = header;
+
+                const docNum = header.doc_number || String(vidomistId);
+                const regNum = header.reg_number || docNum;
+                document.getElementById('prnDocTitle').innerText = `РОЗДАВАЛЬНА ВІДОМІСТЬ № ${docNum}`;
+                document.getElementById('prnRegTitle').innerText = `Реєстраційний № ${regNum} | Місяць: ${session.month_key}`;
+                document.getElementById('prnKomu').innerText = header.komu || '-';
+                
+                const btnClose = document.getElementById('btnCloseVidomistBtn');
+                const prnStatus = document.getElementById('prnStatus');
+                if (header.is_closed) {
+                    btnClose.disabled = true;
+                    btnClose.innerText = '🔒 Відомість закрита';
+                    prnStatus.innerText = '[ЗАКРИТА]';
+                    prnStatus.style.color = 'gray';
+                } else {
+                    btnClose.disabled = false;
+                    btnClose.innerText = '🔒 Закрити відомість';
+                    prnStatus.innerText = '[ВІДКРИТА]';
+                    prnStatus.style.color = '#10b981';
+                }
+
+                const sheetLimit = header.max_rows || 15;
+                currentSheetRows = {};
+                for (let r = 1; r <= sheetLimit; r++) {
+                    currentSheetRows[r] = { row_no: r, marka: '', number: '', dl: '', date: '', id_ovt_it: null, driver_pib: '', created_by: '', fuels: {} };
+                }
+
+                rows.forEach(item => {
+                    const r = item.row_no;
+                    if (!currentSheetRows[r]) return;
+                    const row = currentSheetRows[r];
+                    row.marka = item.marka || '';
+                    row.number = item.number || '';
+                    row.dl = item.dl || '';
+                    row.date = item.date || '';
+                    row.id_ovt_it = item.id_ovt_it || null;
+                    row.driver_pib = item.driver_pib || '';
+                    row.created_by = (item.created_by || header.created_by || '').trim();
+
+                    const t = item.item_type;
+                    const q = Number(item.quantity) || 0;
+                    if (q > 0) row.fuels[t] = q;
+                });
+            }
+        } catch (err) {}
+
+        renderRowsTable();
+    }
+
+    function renderRowsTable() {
+        const tbody = document.getElementById('tableBodyRows');
+        tbody.innerHTML = '';
+
+        const totals = {};
+        activeFuels.forEach(f => { totals[f] = 0; });
+        activeOils.forEach(o => { totals[o] = 0; });
+        activeLiquids.forEach(l => { totals[l] = 0; });
+
+        const isClosed = currentSelectedVidomistObj && currentSelectedVidomistObj.is_closed;
+        const totalRowsCount = Object.keys(currentSheetRows).length || 15;
+        const currentLogin = (session && session.login) ? session.login.trim().toLowerCase() : '';
+        const isMaster = isMasterUser();
+
+        for (let r = 1; r <= totalRowsCount; r++) {
+            const tr = document.createElement('tr');
+            const row = currentSheetRows[r] || { fuels: {} };
+
+            let fuelCells = '';
+            activeFuels.forEach(f => {
+                const q = row.fuels[f] || '';
+                if (q) totals[f] += Number(q);
+                fuelCells += `<td>${q}</td>`;
+            });
+
+            let oilCells = '';
+            activeOils.forEach(o => {
+                const q = row.fuels[o] || '';
+                if (q) totals[o] += Number(q);
+                oilCells += `<td>${q}</td>`;
+            });
+
+            let liqCells = '';
+            activeLiquids.forEach(l => {
+                const q = row.fuels[l] || '';
+                if (q) totals[l] += Number(q);
+                liqCells += `<td>${q}</td>`;
+            });
+
+            const isFilled = Boolean(row.number || Object.keys(row.fuels).length > 0);
+            const rowAuthor = (row.created_by || (currentSelectedVidomistObj ? currentSelectedVidomistObj.created_by : '') || '').toLowerCase();
+            const isRowOwner = isMaster || (rowAuthor === currentLogin);
+
+            if (isFilled) {
+                if (isRowOwner && !isClosed) {
+                    tr.className = 'my-row';
+                    tr.title = `Ваш запис (подвійний клік для редагування). Заправив: ${row.created_by || 'Ви'}`;
+                    tr.ondblclick = () => editRow(r);
+                } else {
+                    tr.className = 'other-row';
+                    tr.title = `Запис заправника: ${row.created_by || 'інший'}. Редагування недоступне.`;
+                    tr.ondblclick = () => {
+                        if (!isMaster) alert(`Заборонено: цей рядок вніс заправник ${row.created_by || 'інший'}. Редагувати можна лише власні записи.`);
+                    };
+                }
+            }
+
+            const dlDisplay = isFilled ? (row.dl || '<span style="color:#fbbf24; font-size:0.72rem;" title="Заправка на олівець (очікує відкриття листа)">✏️ на олівець</span>') : '';
+
+            tr.innerHTML = `
+                <td><b>${r}</b></td>
+                <td>${currentSelectedVidomistObj ? currentSelectedVidomistObj.doc_number : ''}</td>
+                <td>${row.marka || ''}</td>
+                <td><b>${row.number || ''}</b></td>
+                <td>${dlDisplay}</td>
+                ${fuelCells}
+                ${oilCells}
+                ${liqCells}
+                <td>${row.date || ''}</td>
+                <td class="action-col no-print">
+                    ${(isFilled && !isClosed && isRowOwner) ? `
+                        <button class="btn btn-sm btn-secondary" title="Редагувати" onclick="editRow(${r})">✏️</button>
+                        <button class="btn btn-sm btn-danger" title="Видалити" onclick="deleteRow(${currentSelectedVidomistObj.id},${r})">🗑️</button>
+                    ` : ''}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        const tfoot = document.getElementById('tableFoot');
+        let totFuelCells = '';
+        activeFuels.forEach(f => { totFuelCells += `<td>${Number(totals[f] || 0).toFixed(1).replace(/\.0$/, '')}</td>`; });
+
+        let totOilCells = '';
+        activeOils.forEach(o => { totOilCells += `<td>${Number(totals[o] || 0).toFixed(1).replace(/\.0$/, '')}</td>`; });
+
+        let totLiqCells = '';
+        activeLiquids.forEach(l => { totLiqCells += `<td>${Number(totals[l] || 0).toFixed(1).replace(/\.0$/, '')}</td>`; });
+
+        tfoot.innerHTML = `
+            <tr class="total-row">
+                <td colspan="5" style="text-align: center; font-weight: bold;">Всього</td>
+                ${totFuelCells}
+                ${totOilCells}
+                ${totLiqCells}
+                <td>-</td>
+                <td class="action-col no-print">-</td>
+            </tr>
+        `;
+    }
+
+    function editRow(rowNo) {
+        const row = currentSheetRows[rowNo];
+        if (!row) return;
+
+        const isMaster = isMasterUser();
+        const currentLogin = (session && session.login) ? session.login.trim() : '';
+        const isRowOwner = isMaster || (row.created_by && row.created_by.trim() === currentLogin);
+
+        if (!isRowOwner) {
+            alert(`Редагування заборонено: цей рядок створив заправник ${row.created_by}!`);
+            return;
+        }
+
+        const vidId = currentSelectedVidomistObj.id;
+        isEditMode = true;
+        editingRecordMeta = { vidomistId: vidId, rowNo: rowNo, id_ovt_it: row.id_ovt_it };
+
+        switchTab('entry');
+
+        document.getElementById('editBanner').classList.remove('hidden');
+        document.getElementById('editBannerText').innerText = `Відомість № ${currentSelectedVidomistObj.doc_number}, фізичний рядок № ${rowNo}`;
+        document.getElementById('btnSubmitFueling').innerText = `Оновити запис заправки (рядок № ${rowNo})`;
+
+        const found = OVT_LOCAL_DB.find(v => (v.viyskovyi_nomer || v.number) === row.number || v.id_ovt_it === row.id_ovt_it);
+
+        if (!found) {
+            isExternalVehicle = true;
+            document.getElementById('vehCard').classList.add('hidden');
+            document.getElementById('boxExternalVehicle').classList.remove('hidden');
+            document.getElementById('boxExternalDocAndDriver').classList.remove('hidden');
+
+            document.getElementById('txtExtVehNum').value = row.number;
+            document.getElementById('txtExtUnit').value = currentSelectedVidomistObj.komu || 'А';
+            document.getElementById('txtExtMarka').value = row.marka;
+            document.getElementById('txtDocNumber').value = row.dl || '';
+            document.getElementById('txtDriver').value = row.driver_pib || '';
+            
+            const hasDiesel = row.fuels['ДП'] > 0;
+            document.getElementById('selExtFuelType').value = hasDiesel ? 'ДП' : 'АБ';
+            updateFuelOptions(hasDiesel ? 'ДП' : 'АБ');
+            updateVidomostiDropdown(currentSelectedVidomistObj.komu);
+        } else {
+            isExternalVehicle = false;
+            selectItem({ ...found, number: found.viyskovyi_nomer || found.number });
+        }
+
+        const selVid = document.getElementById('selVidomist');
+        if (!Array.from(selVid.options).some(o => o.value == vidId)) {
+            selVid.add(new Option(`Відомість № ${currentSelectedVidomistObj.doc_number} [Редагування]`, vidId), 0);
+        }
+        selVid.value = vidId;
+        onVidomistSelectChange(vidId);
+
+        document.getElementById('fDate').value = row.date || new Date().toISOString().split('T')[0];
+        onDateChange(document.getElementById('fDate').value);
+
+        document.getElementById('numFuelQty').value = '';
+        for (const f of activeFuels) {
+            if (row.fuels[f] > 0) {
+                document.getElementById('selFuelCode').value = f;
+                document.getElementById('numFuelQty').value = row.fuels[f];
+                break;
+            }
+        }
+
+        document.getElementById('selOilCode').value = '';
+        document.getElementById('numOilQty').value = '';
+        for (const o of activeOils) {
+            if (row.fuels[o] > 0) {
+                document.getElementById('selOilCode').value = o;
+                document.getElementById('numOilQty').value = row.fuels[o];
+                break;
+            }
+        }
+
+        document.getElementById('selLiquidCode').value = '';
+        document.getElementById('numLiquidQty').value = '';
+        for (const l of activeLiquids) {
+            if (row.fuels[l] > 0) {
+                document.getElementById('selLiquidCode').value = l;
+                document.getElementById('numLiquidQty').value = row.fuels[l];
+                break;
+            }
+        }
+    }
+
+    function cancelEditing() {
+        const vidToReturn = editingRecordMeta ? editingRecordMeta.vidomistId : (currentSelectedVidomistObj ? currentSelectedVidomistObj.id : null);
+        resetVehicleForm();
+        switchTab('journal', vidToReturn);
+    }
+
+    async function deleteRow(vidomistId, rowNo) {
+        if (!confirm(`Ви дійсно бажаєте видалити рядок № ${rowNo}?`)) return;
+
+        try {
+            const resp = await fetch(API.deleteRow, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    vidomist_id: vidomistId, 
+                    record_number: rowNo,
+                    created_by: session.login
+                })
+            });
+
+            if (resp.ok) {
+                alert(`Рядок № ${rowNo} видалено.`);
+                await initApp();
+                refreshJournalSelector(vidomistId);
+            } else {
+                const err = await resp.text();
+                alert(`Помилка видалення: ${err}`);
+            }
+        } catch (e) {
+            alert('Помилка з\'єднання із сервером.');
+        }
+    }
+
+    async function closeCurrentVidomist() {
+        if (!currentSelectedVidomistObj) return;
+        const closedId = currentSelectedVidomistObj.id;
+        if (!confirm(`Закрити роздавальну відомість № ${currentSelectedVidomistObj.doc_number}? Після закриття додавання та редагування буде заблоковано.`)) return;
+
+        try {
+            const resp = await fetch(API.closeVidomist, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vidomist_id: closedId })
+            });
+
+            if (resp.ok) {
+                alert('Відомість успішно закрита!');
+                await initApp();
+                refreshJournalSelector(closedId);
+            } else {
+                alert('Не вдалося закрити відомість.');
+            }
+        } catch (e) {
+            alert('Помилка з\'єднання з сервером.');
+        }
+    }
+
+    async function saveRecord() {
+        const fuelQty = parseFloat(document.getElementById('numFuelQty').value) || 0;
+        const oilQty = parseFloat(document.getElementById('numOilQty').value) || 0;
+        const liqQty = parseFloat(document.getElementById('numLiquidQty').value) || 0;
+
+        const fuelCode = document.getElementById('selFuelCode').value.trim();
+        const oilCode = document.getElementById('selOilCode').value.trim();
+        const liqCode = document.getElementById('selLiquidCode').value.trim();
+
+        if (fuelQty === 0 && oilQty === 0 && liqQty === 0) {
+            alert('⚠️ Вкажіть кількість літрів хоча б для однієї позиції (пальне, олива або рідина)!');
+            return;
+        }
+
+        // Жорстка перевірка: чи обрано тип пального / оливи / спецрідини при введених літрах!
+        if (fuelQty > 0 && !fuelCode) {
+            alert('⚠️ Не обрано тип пального! Оберіть марку пального зі списку.');
+            document.getElementById('selFuelCode').focus();
+            return;
+        }
+        if (oilQty > 0 && !oilCode) {
+            alert('⚠️ Введено кількість оливи (' + oilQty + ' л), але НЕ ОБРАНО ТИП ОЛИВИ!\nБудь ласка, оберіть марку оливи у списку ліворуч.');
+            const elOil = document.getElementById('selOilCode');
+            elOil.style.borderColor = '#ef4444';
+            elOil.focus();
+            return;
+        }
+        if (liqQty > 0 && !liqCode) {
+            alert('⚠️ Введено кількість спецрідини (' + liqQty + ' л), але НЕ ОБРАНО ТИП РІДИНИ!\nБудь ласка, оберіть назву спецрідини у списку ліворуч.');
+            const elLiq = document.getElementById('selLiquidCode');
+            elLiq.style.borderColor = '#ef4444';
+            elLiq.focus();
+            return;
+        }
+
+        let vehNum = '', vehMarka = '', targetRecipient = '', ovtId = null, docNumFinal = '', driverPibFinal = '';
+
+        if (isExternalVehicle) {
+            targetRecipient = document.getElementById('txtExtUnit').value.trim().toUpperCase();
+            vehNum = document.getElementById('txtExtVehNum').value.trim().toUpperCase();
+            vehMarka = document.getElementById('txtExtMarka').value.trim();
+            docNumFinal = document.getElementById('txtDocNumber').value.trim();
+            driverPibFinal = document.getElementById('txtDriver').value.trim();
+
+            if (!targetRecipient || !/^А\d{4}$/.test(targetRecipient)) {
+                alert('Вкажіть точний номер військової частини одержувача: літера А та 4 цифри (наприклад, А7015)!');
+                document.getElementById('txtExtUnit').focus();
+                return;
+            }
+            if (!vehNum) {
+                alert('Вкажіть військовий номер стороннього автомобіля!');
+                document.getElementById('txtExtVehNum').focus();
+                return;
+            }
+            if (!vehMarka) {
+                alert('Вкажіть марку авто сторонньої в/ч!');
+                document.getElementById('txtExtMarka').focus();
+                return;
+            }
+            ovtId = null;
+        } else {
+            if (!selectedVehicle) {
+                alert('Оберіть штатний автомобіль або генератор зі списку!');
+                return;
+            }
+            vehNum = selectedVehicle.viyskovyi_nomer || selectedVehicle.number;
+            vehMarka = selectedVehicle.marka_tekhniky || selectedVehicle.marka || '';
+            targetRecipient = determineRecipient(selectedVehicle);
+            ovtId = selectedVehicle.id_ovt_it || null;
+            docNumFinal = resolvedDocNumberForOurVehicle || '';
+            driverPibFinal = resolvedDriverPibForOurVehicle || '';
+        }
+
+        const items = [];
+        if (fuelQty > 0) items.push({ category: 'fuel', item_type: fuelCode, quantity: fuelQty });
+        if (oilQty > 0) items.push({ category: 'oil', item_type: oilCode, quantity: Number(oilQty.toFixed(1)) });
+        if (liqQty > 0) items.push({ category: 'liquid', item_type: liqCode, quantity: Number(liqQty.toFixed(1)) });
+
+        const selectedVidVal = document.getElementById('selVidomist').value;
+        const isNewVid = isEditMode ? false : (selectedVidVal === 'new');
+        const targetVidId = isEditMode ? editingRecordMeta.vidomistId : (isNewVid ? null : parseInt(selectedVidVal));
+        const maxRowsLimit = parseInt(document.getElementById('numNewMaxRows').value, 10) || 15;
+        const docNumVal = document.getElementById('txtNewDocNumber').value.trim() || nextDocNumber;
+
+        const payload = {
+            month_key: session.month_key,
+            date: document.getElementById('fDate').value,
+            vidomist_mode: isNewVid ? 'new' : 'existing',
+            vidomist_id: targetVidId,
+            new_vidomist: isNewVid ? {
+                doc_number: docNumVal,
+                reg_number: docNumVal,
+                vid_kogo: session.point_name,
+                komu: targetRecipient,
+                max_rows: maxRowsLimit
+            } : null,
+            is_edit: isEditMode,
+            record_number: isEditMode ? editingRecordMeta.rowNo : null,
+            id_ovt_it: ovtId,
+            viyskovyi_nomer: vehNum,
+            marka_tekhniky: vehMarka,
+            nomer_dl: docNumFinal,
+            driver_pib: driverPibFinal,
+            created_by: session.login,
+            items: items
+        };
+
+        const btn = document.getElementById('btnSubmitFueling');
+        btn.disabled = true;
+        btn.innerText = 'Збереження...';
+
+        try {
+            const resp = await fetch(API.saveFueling, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                const wasEdit = isEditMode;
+                const savedVidId = editingRecordMeta ? editingRecordMeta.vidomistId : null;
+                resetVehicleForm();
+                await initApp();
+                alert(wasEdit ? 'Запис заправки успішно оновлено!' : 'Заправку зафіксовано, поля очищено!');
+
+                if (wasEdit && savedVidId) {
+                    switchTab('journal', savedVidId);
+                }
+            } else {
+                const err = await resp.text();
+                alert(`Помилка запису: ${err}`);
+            }
+        } catch (e) {
+            alert('Помилка з\'єднання із сервером при збереженні.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = isEditMode && editingRecordMeta ? `Оновити запис заправки (рядок № ${editingRecordMeta.rowNo})` : 'Зберегти заправку';
+        }
+    }
+
+    initApp();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід до системи ПММ V4</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+        }
+        body { 
+            background: var(--bg-gradient); 
+            color: var(--text-main);
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+        .card-auth { 
+            width: 100%; 
+            max-width: 480px; 
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border); 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 32px 36px 36px 36px !important;
+        }
+        .btn-hub-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+        .btn-hub-back:hover {
+            color: #ffffff;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.35);
+        }
+        h4 { color: var(--text-main); font-weight: 700; }
+        .form-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; }
+        .form-select, .form-control {
+            background-color: var(--input-bg) !important;
+            border: 1px solid var(--input-border) !important;
+            color: var(--text-main) !important;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+            outline: none;
+        }
+        .form-select:disabled { opacity: 0.4; }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 10px;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 10px;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card card-auth">
+    <div>
+        <a href="index.html" class="btn-hub-back">⬅ До порталу систем (Головне меню)</a>
+    </div>
+
+    <div class="text-center mb-4">
+        <h4>Система обліку ПММ V4</h4>
+        <p class="text-muted small" id="statusText">Завантаження структури...</p>
+    </div>
+
+    <form id="authForm">
+        <div class="mb-4">
+            <label for="categorySelect" class="form-label">Батальйон / Категорія</label>
+            <select class="form-select" id="categorySelect" required disabled>
+                <option value="" selected disabled>Очікування даних...</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="subUnitSelect" class="form-label">Підрозділ</label>
+            <select class="form-select" id="subUnitSelect" required disabled>
+                <option value="" selected disabled>-- Спочатку оберіть категорію --</option>
+            </select>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <label for="monthSelect" class="form-label">Звітний місяць</label>
+                <select class="form-select" id="monthSelect" required>
+                    <option value="" selected disabled>-- Місяць --</option>
+                    <option value="01">Січень (01)</option>
+                    <option value="02">Лютий (02)</option>
+                    <option value="03">Березень (03)</option>
+                    <option value="04">Квітень (04)</option>
+                    <option value="05">Травень (05)</option>
+                    <option value="06">Червень (06)</option>
+                    <option value="07">Липень (07)</option>
+                    <option value="08">Серпень (08)</option>
+                    <option value="09">Вересень (09)</option>
+                    <option value="10">Жовтень (10)</option>
+                    <option value="11">Листопад (11)</option>
+                    <option value="12">Грудень (12)</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <label for="yearSelect" class="form-label">Рік</label>
+                <select class="form-select" id="yearSelect" required>
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="gatewayPassword" class="form-label">Пароль доступу</label>
+            <input type="password" class="form-control" id="gatewayPassword" required placeholder="Введіть пароль...">
+        </div>
+
+        <div id="errorDiv" class="alert alert-danger d-none mb-4" role="alert"></div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100" disabled>
+            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
+            <span id="btnText">Вхід до системи</span>
+        </button>
+    </form>
+</div>
+
+<script>
+    const N8N_URL_GET_STRUCTURE = 'https://n8n.pmm-system.com/webhook/v4/get-branches-list';
+    const N8N_URL_CHECK_GATEWAY  = 'https://n8n.pmm-system.com/webhook/v4/check-database-gateway';
+    const N8N_URL_LOG_ENTER      = 'https://n8n.pmm-system.com/webhook/v4/log-system-enter';
+
+    const categorySelect  = document.getElementById('categorySelect');
+    const subUnitSelect   = document.getElementById('subUnitSelect');
+    const yearSelect      = document.getElementById('yearSelect');
+    const monthSelect     = document.getElementById('monthSelect');
+    const gatewayPassword = document.getElementById('gatewayPassword');
+    const statusText      = document.getElementById('statusText');
+    const errorDiv        = document.getElementById('errorDiv');
+    const submitBtn       = document.getElementById('submitBtn');
+    const btnText         = document.getElementById('btnText');
+    const btnSpinner      = document.getElementById('btnSpinner');
+
+    let currentStructure = [];
+
+    function getDeviceAndBrowser() {
+        const ua = navigator.userAgent;
+        let device = "PC", browser = "Browser";
+        if (/iphone|ipad|ipod/i.test(ua)) device = "iOS";
+        else if (/android/i.test(ua)) device = "Android";
+        else if (/windows/i.test(ua)) device = "Windows";
+        else if (/macintosh/i.test(ua)) device = "Mac";
+        else if (/linux/i.test(ua)) device = "Linux";
+
+        if (/chrome|crios/i.test(ua)) browser = "Chrome";
+        else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+        else if (/safari/i.test(ua)) browser = "Safari";
+        else if (/edg/i.test(ua)) browser = "Edge";
+        return { device, browser };
+    }
+
+    fetch(N8N_URL_GET_STRUCTURE)
+        .then(res => res.json())
+        .then(data => {
+            let res = Array.isArray(data) ? data[0] : data;
+            if (res.json) res = res.json;
+
+            if (res && res.structure) {
+                currentStructure = res.structure;
+                updateCategories(currentStructure);
+                statusText.innerText = 'Авторизація оператора підрозділу';
+                submitBtn.disabled = false;
+            } else {
+                throw new Error();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            statusText.innerText = "🔴 Помилка отримання структури";
+            categorySelect.innerHTML = '<option value="">Не вдалося завантажити підрозділи</option>';
+        });
+
+    function updateCategories(structure) {
+        categorySelect.innerHTML = '<option value="" selected disabled>-- Оберіть батальйон / категорію --</option>';
+        structure.forEach(bat => {
+            const option = document.createElement('option');
+            option.value = bat.code;  
+            option.textContent = bat.name;
+            categorySelect.appendChild(option);
+        });
+        categorySelect.disabled = false;
+    }
+
+    categorySelect.addEventListener('change', function() {
+        const selectedBatCode = this.value;
+        errorDiv.classList.add('d-none');
+        const selectedBat = currentStructure.find(b => b.code === selectedBatCode);
+        
+        if (selectedBatCode === 'А7051' || selectedBatCode === 'A7051' || selectedBatCode === 'СПММ') {
+            subUnitSelect.innerHTML = '<option value="ALL" selected>Всі підрозділи (Майстер-доступ)</option>';
+            subUnitSelect.disabled = true;
+        } else if (selectedBat && selectedBat.sub_units) {
+            subUnitSelect.innerHTML = '<option value="" selected disabled>-- Оберіть підрозділ --</option>';
+            const allOption = document.createElement('option');
+            allOption.value = 'ALL';
+            allOption.textContent = 'Всі підрозділи (Зведений звіт)';
+            subUnitSelect.appendChild(allOption);
+
+            selectedBat.sub_units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit.code; 
+                option.textContent = unit.name;
+                subUnitSelect.appendChild(option);
+            });
+            subUnitSelect.disabled = false;
+        } else {
+            subUnitSelect.innerHTML = '<option value="" selected disabled>-- Немає доступних підрозділів --</option>';
+            subUnitSelect.disabled = true;
+        }
+    });
+
+    function showError(message) {
+        errorDiv.innerText = message;
+        errorDiv.classList.remove('d-none');
+        submitBtn.disabled = false;
+        btnText.innerText = 'Вхід до системи';
+        btnSpinner.classList.add('d-none');
+    }
+
+    document.getElementById('authForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const category = categorySelect.value;
+        const subUnit  = subUnitSelect.value;
+        const year     = yearSelect.value;   
+        const month    = monthSelect.value;
+        const pass     = gatewayPassword.value.trim();
+        const monthKey = `${month}_${year}`;
+        
+        errorDiv.classList.add('d-none');
+        submitBtn.disabled = true;
+        btnText.innerText = 'Перевірка...';
+        btnSpinner.classList.remove('d-none');
+
+        const info = getDeviceAndBrowser();
+
+        try {
+            const resGateway = await fetch(N8N_URL_CHECK_GATEWAY, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bat: category,
+                    category: category, 
+                    sub_unit: subUnit, 
+                    pidrozdil: subUnit,
+                    month: month, 
+                    year: year,
+                    month_key: monthKey
+                })
+            });
+
+            let data = await resGateway.json();
+            let res = Array.isArray(data) ? data[0] : data;
+            if (res.json) res = res.json;
+
+            if (res && res.exists === true) {
+                const correctPassword = String(res.Pasword || res.password || '').trim();
+                
+                if (pass === correctPassword) {
+                    btnText.innerText = 'Вхід...';
+                    try {
+                        await fetch(N8N_URL_LOG_ENTER, {
+                            method: 'POST',
+                            keepalive: true,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                category: category, 
+                                sub_unit: subUnit, 
+                                month: month, 
+                                year: year, 
+                                month_key: monthKey,
+                                status: "Успішно", 
+                                device: info.device, 
+                                browser: info.browser
+                            })
+                        });
+                    } catch (logErr) {}
+
+                    window.location.href = `index_PMM_V4.html?category=${encodeURIComponent(category)}&sub_unit=${encodeURIComponent(subUnit)}&month_key=${encodeURIComponent(monthKey)}`;
+                    return;
+                } else {
+                    try {
+                        await fetch(N8N_URL_LOG_ENTER, {
+                            method: 'POST',
+                            keepalive: true,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                category: category, 
+                                sub_unit: subUnit, 
+                                month_key: monthKey,
+                                status: "Невірний пароль", 
+                                device: info.device, 
+                                browser: info.browser
+                            })
+                        });
+                    } catch (logErr) {}
+
+                    showError('❌ Невірний пароль доступу!');
+                    return;
+                }
+            } else {
+                showError(`⚠️ Звітний період ${monthKey} або підрозділ не знайдено в базі!`);
+            }
+        } catch (err) {
+            console.error(err);
+            showError('❌ Помилка з\'єднання з сервером перевірки.');
+        }
+    });
+</script>
+</body>
+</html>

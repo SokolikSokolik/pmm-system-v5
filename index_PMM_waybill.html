@@ -1,0 +1,3241 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Термінал обліку та верифікації ДЛ / ЛРА</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-dark: #0b1320;
+            --border: #334155;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #10b981;
+            --accent-warn: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 8px 10px; display: flex; justify-content: center; }
+        .wrapper { width: 100%; max-width: 100%; }
+
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+        .title-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .title-group h2 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+        .user-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .badge-tag { padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; }
+        .tag-bat { background: #0369a1; color: #e0f2fe; }
+        .tag-role { background: #4338ca; color: #e0e7ff; }
+        .tag-user { background: #334155; color: #f8fafc; }
+        .tag-edit { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+        .btn-exit { background: #334155; border: 1px solid var(--border); color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .btn-exit:hover { background: #475569; color: #fff; }
+
+        .rev-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .rev-tab-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 7px 14px; border-radius: 8px; font-size: 0.84rem; font-weight: 700; cursor: pointer; transition: 0.15s; }
+        .rev-tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        .pencil-top-alert { background: rgba(245, 158, 11, 0.14); border: 1px solid #f59e0b; color: #fde68a; padding: 9px 14px; border-radius: 8px; margin-bottom: 10px; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+        .toolbar-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+        .filters-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; flex: 1; }
+        .filter-item { display: flex; flex-direction: column; gap: 3px; min-width: 125px; }
+        .filter-item label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .filter-item select, .filter-item input { height: 34px; padding: 4px 8px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.82rem; }
+
+        .stats-pills { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+        .stat-pill { padding: 5px 9px; border-radius: 6px; font-size: 0.74rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; user-select: none; }
+        .stat-pill:hover { opacity: 0.9; }
+        .sp-all { background: #334155; color: #f8fafc; }
+        .sp-none { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: #475569; }
+        .sp-pencil { background: rgba(245, 158, 11, 0.22); color: #fde047; border-color: #f59e0b; }
+        .sp-open { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+        .sp-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .sp-rework { background: rgba(239, 68, 68, 0.18); color: #f87171; border-color: rgba(239, 68, 68, 0.4); }
+        .sp-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+
+        .table-wrap { width: 100%; overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+        table.data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
+        table.data-table th, table.data-table td { border: 1px solid var(--border); padding: 5px 5px; white-space: nowrap; }
+        table.data-table th { background: var(--bg-dark); color: #94a3b8; font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; font-size: 0.73rem; }
+        table.data-table th:hover { color: #fff; background: #16243d; }
+        table.data-table tbody tr { cursor: pointer; transition: background 0.12s; }
+        table.data-table tbody tr:hover td { background: #1e3a5f; }
+        .row-rework td { background: rgba(239, 68, 68, 0.08); }
+        .row-pencil td { background: rgba(245, 158, 11, 0.07); }
+
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 5px; font-weight: 700; font-size: 0.68rem; text-transform: uppercase; }
+        .status-none { background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.25); }
+        .status-pencil { background: rgba(245, 158, 11, 0.22); color: #fde047; border: 1px solid #f59e0b; }
+        .status-open { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .status-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-rework { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .status-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .trailer-tag-inline { display: inline-block; background: rgba(168, 85, 247, 0.18); border: 1px solid rgba(168, 85, 247, 0.45); color: #e9d5ff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 4px; }
+        .oil-cell-active { background: rgba(250, 204, 21, 0.12); color: #fde047; font-weight: 700; }
+        .liq-cell-active { background: rgba(52, 211, 153, 0.12); color: #86efac; font-weight: 700; }
+
+        .btn { padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: 0.18s; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-accent { background: var(--accent); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-warn { background: var(--accent-warn); color: #0f172a; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+        .btn-outline:hover { background: #334155; color: #fff; }
+        .btn-xs { padding: 3px 7px; font-size: 0.72rem; border-radius: 5px; }
+
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 12px; overflow-y: auto; }
+        .modal-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 860px; padding: 18px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); max-height: 94vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px; }
+        .modal-header h3 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+        .close-x { background: transparent; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+        .close-x:hover { color: #fff; }
+
+        .veh-summary-panel { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+        .veh-summary-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.83rem; }
+        .veh-summary-row + .veh-summary-row { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .field-group { margin-bottom: 10px; }
+        .field-group label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 16px; }
+        .field-group input, .field-group select { width: 100%; height: 38px; padding: 6px 10px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 7px; color: #fff; font-size: 0.88rem; }
+        .field-group input:focus, .field-group select:focus { outline: none; border-color: var(--accent); }
+        .field-group input[readonly], .field-group select[disabled] { background: var(--bg-dark); color: #94a3b8; cursor: not-allowed; }
+
+        .section-divider { font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #38bdf8; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin: 12px 0 8px 0; display: flex; justify-content: space-between; align-items: center; }
+
+        .route-tags-box { display: flex; flex-wrap: wrap; gap: 6px; padding: 7px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 7px; min-height: 38px; margin-top: 6px; }
+        .route-chip { background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); color: #e0f2fe; padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .route-chip b { cursor: pointer; color: #f87171; font-size: 0.88rem; }
+
+        .trailers-panel { background: var(--bg-dark); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 8px; padding: 10px; margin-top: 8px; }
+        .trailer-item-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #152238; border: 1px solid var(--border); padding: 7px 10px; border-radius: 7px; margin-top: 6px; flex-wrap: wrap; font-size: 0.83rem; }
+
+        .new-driver-box { background: var(--bg-dark); border: 1px dashed #38bdf8; border-radius: 8px; padding: 10px; margin-top: 6px; }
+        .manual-fuel-box { background: var(--bg-dark); border: 1px dashed #f59e0b; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+        .rework-banner { background: #451a03; border: 1px solid #f59e0b; color: #fef3c7; padding: 8px 10px; border-radius: 7px; margin-bottom: 10px; font-size: 0.82rem; }
+        .warn-open-prev { background: rgba(245, 158, 11, 0.14); border: 1px solid #f59e0b; color: #fde68a; padding: 8px 10px; border-radius: 7px; margin-bottom: 10px; font-size: 0.81rem; }
+        .hint-dblclick { font-size: 0.73rem; color: var(--text-muted); margin-left: 8px; font-weight: 400; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- ВЕРХНЯ ПАНЕЛЬ -->
+    <div class="header-bar">
+        <div class="title-group">
+            <h2 id="lblMainTitle">📋 Термінал обліку ДЛ та ЛРА</h2>
+            <span class="hint-dblclick">💡 Подвійний клік по рядку відкриває картку</span>
+        </div>
+        <div class="user-tags">
+            <span class="badge-tag tag-bat" id="tagBat">Батальйон: ...</span>
+            <span class="badge-tag tag-role" id="tagRole">Напрямок: ...</span>
+            <span class="badge-tag tag-edit hidden" id="tagCanEdit">✏️ Право редагування</span>
+            <span class="badge-tag tag-user" id="tagMonth">Місяць: ...</span>
+            <button class="btn-exit" onclick="logoutWaybill()">Вихід 🚪</button>
+        </div>
+    </div>
+
+    <!-- НАВІГАЦІЯ ВКЛАДОК ДЛЯ ОПЕРАТОРА БАТАЛЬЙОНУ / ПІДРОЗДІЛУ -->
+    <div id="operatorTabsBar" class="rev-tabs hidden">
+        <button class="rev-tab-btn active" id="btnOpTabChess" onclick="switchOperatorTab('chess')">📋 Облік листів у періоді</button>
+        <button class="rev-tab-btn" id="btnOpTabHistory" onclick="switchOperatorTab('history')">📖 Історія ОВТ / ІТ (Паспорт по місяцях і періодах)</button>
+    </div>
+
+    <!-- НАВІГАЦІЯ ВКЛАДОК ДЛЯ СЛУЖБИ ПЕРЕВІРКИ (СВТОЛ / ЕТС) -->
+    <div id="reviewerTabsBar" class="rev-tabs hidden">
+        <button class="rev-tab-btn active" id="btnRevTabQueue" onclick="switchReviewerTab('queue')">📋 Черга верифікації листів</button>
+        <button class="rev-tab-btn" id="btnRevTabArchive" onclick="switchReviewerTab('archive')">🗄️ Архів затверджених</button>
+        <button class="rev-tab-btn" id="btnRevTabFleet" onclick="switchReviewerTab('fleet')">🛠️ Реєстр техніки (ОВТ / ІТ)</button>
+        <button class="rev-tab-btn" id="btnRevTabHistory" onclick="switchReviewerTab('history')">📖 Історія ОВТ / ІТ (Паспорт)</button>
+    </div>
+
+    <!-- КОНТИНУУМ 1: ШАХМАТКА ОПЕРАТОРА БАТАЛЬЙОНУ / ПІДРОЗДІЛУ -->
+    <div id="operatorContainer" class="hidden">
+        <div id="topPencilAlert" class="pencil-top-alert hidden"></div>
+        <div id="unitSubmodeBanner" class="warn-open-prev hidden" style="border-color:#38bdf8; color:#bae6fd; background:rgba(56,189,248,0.12);">
+            ℹ️ <b>Режим підрозділу Управління:</b> Відкриття нових листів здійснює Управління бригади. Ви бачите всі свої машини, заправки «на олівець» та вносите фактичні дані пробігу/мотогодин і витрати ПММ у відкриті листи (подвійний клік або кнопка «🔒 Закрити»). У реквізитах шапки можна змінювати лише водія/відповідального.
+        </div>
+
+        <div class="toolbar-card">
+            <div class="filters-group">
+                <div class="filter-item" style="min-width: 115px;">
+                    <label for="selPeriod">Період (декада)</label>
+                    <select id="selPeriod" onchange="onPeriodChange()"></select>
+                </div>
+                <div class="filter-item" style="min-width: 140px;" id="boxOpFilterPidrozdil">
+                    <label for="selFilterPidrozdil">Підрозділ</label>
+                    <select id="selFilterPidrozdil" onchange="renderChessboardTable()">
+                        <option value="ALL">Усі підрозділи</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="min-width: 165px;">
+                    <label for="selFilterStatus">Статус листа</label>
+                    <select id="selFilterStatus" onchange="renderChessboardTable()">
+                        <option value="ALL">Усі статуси</option>
+                        <option value="pencil">⛽ Заправлено «на олівець»</option>
+                        <option value="none">⚪ Не відкрито</option>
+                        <option value="open">🟢 Відкритий (у роботі)</option>
+                        <option value="pending_review">🟡 На перевірці</option>
+                        <option value="rework">🔴 На доопрацюванні</option>
+                        <option value="approved">✅ Затверджено</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="flex: 1; min-width: 180px;">
+                    <label for="txtSearch">Пошук (номер, марка, водій, № листа)</label>
+                    <input type="text" id="txtSearch" placeholder="Введіть для пошуку..." oninput="renderChessboardTable()">
+                </div>
+                <button class="btn btn-primary" style="height: 34px;" onclick="refreshAllData()">🔄 Оновити</button>
+            </div>
+
+            <div class="stats-pills" id="statsPillsBar"></div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr id="tblChessHead"></tr>
+                </thead>
+                <tbody id="tblChessBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- КОНТИНУУМ 2: СЛУЖБА ПЕРЕВІРКИ (СВТОЛ / ЕТС) -->
+    <div id="reviewerContainer" class="hidden">
+        <!-- Вкладка 2.1: Черга перевірки -->
+        <div id="revQueueSection">
+            <div class="toolbar-card">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label for="selReviewerBatFilter">Батальйон</label>
+                        <select id="selReviewerBatFilter" onchange="onReviewerQueueBatFilterChange()">
+                            <option value="ALL">Усі батальйони</option>
+                            <option value="1ЛБ">1ЛБ</option>
+                            <option value="2ЛБ">2ЛБ</option>
+                            <option value="3ЛБ">3ЛБ</option>
+                            <option value="4ЛБ">4ЛБ</option>
+                            <option value="5ЛБ">5ЛБ</option>
+                            <option value="1БПС">1БПС</option>
+                            <option value="2БПС">2БПС</option>
+                            <option value="Упр">Упр</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selReviewerPidrozdilFilter">Підрозділ</label>
+                        <select id="selReviewerPidrozdilFilter" onchange="renderReviewerQueueRows()">
+                            <option value="ALL">Усі підрозділи</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selReviewerPeriodFilter">Період</label>
+                        <select id="selReviewerPeriodFilter" onchange="renderReviewerQueueRows()">
+                            <option value="ALL">Усі періоди</option>
+                            <option value="I">Період I</option>
+                            <option value="II">Період II</option>
+                            <option value="III">Період III</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="flex:1;">
+                        <label for="txtRevSearch">Пошук по черзі перевірки (подвійний клік — картка)</label>
+                        <input type="text" id="txtRevSearch" placeholder="Номер, марка, водій, маршрут..." oninput="renderReviewerQueueRows()">
+                    </div>
+                    <button class="btn btn-primary" style="height: 34px;" onclick="loadReviewerQueue()">🔄 Оновити чергу</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr id="tblReviewerHead"></tr>
+                    </thead>
+                    <tbody id="tblReviewerBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка 2.2: АРХІВ ЗАТВЕРДЖЕНИХ ЛИСТІВ -->
+        <div id="revArchiveSection" class="hidden">
+            <div class="toolbar-card">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label for="selArchiveMonth">Звітний місяць</label>
+                        <select id="selArchiveMonth" onchange="loadReviewerArchive()"></select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selArchiveBat">Батальйон</label>
+                        <select id="selArchiveBat" onchange="onReviewerArchiveBatFilterChange()">
+                            <option value="ALL">Усі батальйони</option>
+                            <option value="1ЛБ">1ЛБ</option>
+                            <option value="2ЛБ">2ЛБ</option>
+                            <option value="3ЛБ">3ЛБ</option>
+                            <option value="4ЛБ">4ЛБ</option>
+                            <option value="5ЛБ">5ЛБ</option>
+                            <option value="1БПС">1БПС</option>
+                            <option value="2БПС">2БПС</option>
+                            <option value="Упр">Упр</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selArchivePidrozdil">Підрозділ</label>
+                        <select id="selArchivePidrozdil" onchange="renderReviewerArchiveRows()">
+                            <option value="ALL">Усі підрозділи</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selArchivePeriod">Період</label>
+                        <select id="selArchivePeriod" onchange="renderReviewerArchiveRows()">
+                            <option value="ALL">Усі періоди</option>
+                            <option value="I">Період I</option>
+                            <option value="II">Період II</option>
+                            <option value="III">Період III</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="flex:1;">
+                        <label for="txtArchiveSearch">Пошук у архіві (номер авто, № листа, водій)</label>
+                        <input type="text" id="txtArchiveSearch" placeholder="Введіть для пошуку..." oninput="renderReviewerArchiveRows()">
+                    </div>
+                    <button class="btn btn-primary" style="height: 34px;" onclick="loadReviewerArchive()">🔄 Оновити архів</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr id="tblArchiveHead"></tr>
+                    </thead>
+                    <tbody id="tblArchiveBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка 2.3: Управління парком техніки -->
+        <div id="revFleetSection" class="hidden">
+            <div class="toolbar-card">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label for="selFleetBat">Батальйон</label>
+                        <select id="selFleetBat" onchange="onReviewerFleetBatFilterChange()">
+                            <option value="ALL">Усі батальйони</option>
+                            <option value="1ЛБ">1ЛБ</option>
+                            <option value="2ЛБ">2ЛБ</option>
+                            <option value="3ЛБ">3ЛБ</option>
+                            <option value="4ЛБ">4ЛБ</option>
+                            <option value="5ЛБ">5ЛБ</option>
+                            <option value="1БПС">1БПС</option>
+                            <option value="2БПС">2БПС</option>
+                            <option value="Упр">Упр</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label for="selFleetPidrozdil">Підрозділ</label>
+                        <select id="selFleetPidrozdil" onchange="renderFleetTable()">
+                            <option value="ALL">Усі підрозділи</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="flex:1;">
+                        <label for="txtFleetSearch">Пошук у реєстрі (номер, марка, № двигуна, підрозділ)</label>
+                        <input type="text" id="txtFleetSearch" placeholder="Введіть для пошуку..." oninput="renderFleetTable()">
+                    </div>
+                    <button class="btn btn-accent" style="height: 34px;" onclick="openFleetModal(null)">➕ Додати техніку</button>
+                    <button class="btn btn-primary" style="height: 34px;" onclick="loadReviewerFleet()">🔄 Оновити список</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr id="tblFleetHead"></tr>
+                    </thead>
+                    <tbody id="tblFleetBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- СПІЛЬНА ВКЛАДКА 3 (ДЛЯ ВСІХ РІВНІВ): ІСТОРІЯ ОВТ / ІТ ПО МІСЯЦЯХ ТА ПЕРІОДАХ -->
+    <div id="sharedHistorySection" class="hidden">
+        <div class="toolbar-card">
+            <div class="filters-group">
+                <div class="filter-item" id="boxHistFilterBat" style="min-width:130px;">
+                    <label for="selHistBat">Батальйон</label>
+                    <select id="selHistBat" onchange="populateHistoryVehicleSelect()">
+                        <option value="ALL">Усі батальйони</option>
+                        <option value="1ЛБ">1ЛБ</option>
+                        <option value="2ЛБ">2ЛБ</option>
+                        <option value="3ЛБ">3ЛБ</option>
+                        <option value="4ЛБ">4ЛБ</option>
+                        <option value="5ЛБ">5ЛБ</option>
+                        <option value="1БПС">1БПС</option>
+                        <option value="2БПС">2БПС</option>
+                        <option value="Упр">Упр</option>
+                    </select>
+                </div>
+                <div class="filter-item" id="boxHistFilterUnit" style="min-width:140px;">
+                    <label for="selHistPidrozdil">Підрозділ</label>
+                    <select id="selHistPidrozdil" onchange="populateHistoryVehicleSelect()">
+                        <option value="ALL">Усі підрозділи</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="min-width:210px;">
+                    <label for="txtHistQuickFilter">Швидкий пошук авто/ІТ</label>
+                    <input type="text" id="txtHistQuickFilter" placeholder="Введіть номер або марку..." oninput="populateHistoryVehicleSelect()">
+                </div>
+                <div class="filter-item" style="flex:1; min-width:260px;">
+                    <label for="selHistVehicle">Оберіть одиницю техніки (ОВТ / ІТ / Причіп) *</label>
+                    <select id="selHistVehicle" onchange="loadVehicleFullHistory(this.value)"></select>
+                </div>
+                <button class="btn btn-primary" style="height: 34px;" onclick="loadVehicleFullHistory(document.getElementById('selHistVehicle').value)">🔄 Завантажити паспорт</button>
+            </div>
+        </div>
+
+        <div id="historyContentBox">
+            <div class="toolbar-card" style="justify-content:center; padding:24px; color:#94a3b8;">
+                Оберіть автомобіль або агрегат зі списку вище, щоб переглянути його повну історію по всіх місяцях та періодах.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНЕ ВІКНО: КАРТКА ДЛ ТА ЛРА -->
+<div id="waybillModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="mdlTitle">Картка листа</h3>
+            <button class="close-x" onclick="closeWaybillModal()">×</button>
+        </div>
+
+        <div id="mdlPrevOpenWarn" class="warn-open-prev hidden"></div>
+        <div id="mdlPencilNotice" class="warn-open-prev hidden" style="border-color:#10b981; color:#a7f3d0; background:rgba(16,185,129,0.12);"></div>
+
+        <div id="mdlReworkBanner" class="rework-banner hidden">
+            <b>⚠️ Повернено на доопрацювання службою:</b>
+            <div id="mdlReworkText" style="margin-top:3px; font-weight:700;"></div>
+        </div>
+
+        <div class="veh-summary-panel">
+            <div class="veh-summary-row">
+                <div><span id="lblEntityPrefix">ОВТ:</span> <b id="mdlVehName" style="color:#38bdf8;">-</b></div>
+                <div id="boxEngineNumInfo" class="hidden">№ генератора/двигуна: <b id="mdlEngineNum" style="color:#e9d5ff;">-</b></div>
+                <div>Підрозділ: <b id="mdlVehUnit" style="color:#fde047;">-</b></div>
+                <div>Пальне: <b id="mdlVehFuel">-</b></div>
+                <div>Попередній № листа: <b id="mdlPrevDl" style="color:#fbbf24;">-</b></div>
+            </div>
+            <div class="veh-summary-row">
+                <div id="boxInfoOdo">Останній одометр: <b id="mdlInfoOdo" style="color:#fff;">0 км</b></div>
+                <div id="boxInfoMoto">Мотогодини: <b id="mdlInfoMoto" style="color:#fff;">0 м/г</b></div>
+                <div>Залишок пального: <b id="mdlInfoFuelBal" style="color:#34d399;">0 л</b></div>
+                <div>Олива в баку: <b id="mdlInfoOilBal" style="color:#fde047;">0 л</b></div>
+                <div>Спецрідини: <b id="mdlInfoLiqBal" style="color:#86efac;">0 л</b></div>
+            </div>
+        </div>
+
+        <div class="section-divider">
+            <span id="lblSec1Title">1. Реквізити документа, дати та водії</span>
+        </div>
+
+        <div class="grid-2">
+            <div class="field-group">
+                <label for="mdlDocNumber" id="lblMdlDocNum">Номер листа *</label>
+                <input type="text" id="mdlDocNumber" placeholder="Введіть номер...">
+            </div>
+
+            <div class="field-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label for="mdlDriverSelect" id="lblMdlDriver" style="margin:0;">Основний водій *</label>
+                    <button type="button" class="btn btn-xs btn-outline" id="btnToggleNewDriver" onclick="toggleManualDriverBox()">+ Інший водій</button>
+                </div>
+                <select id="mdlDriverSelect"></select>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:2px;">
+            <div class="field-group" style="display:flex; gap:8px;">
+                <div style="flex:1;">
+                    <label for="mdlDateStart" style="color:#38bdf8;">Дата початку *</label>
+                    <input type="date" id="mdlDateStart">
+                </div>
+                <div style="flex:1;">
+                    <label for="mdlDateEnd" style="color:#38bdf8;">Дата кінця *</label>
+                    <input type="date" id="mdlDateEnd">
+                </div>
+            </div>
+
+            <div class="field-group" id="boxDriver2">
+                <label for="mdlDriver2Select">Напарник (Водій 2 / опціонально)</label>
+                <select id="mdlDriver2Select"></select>
+            </div>
+        </div>
+
+        <div id="boxNewDriver" class="new-driver-box hidden">
+            <div style="font-size:0.78rem; font-weight:700; color:#38bdf8; margin-bottom:6px;" id="lblNewPersonHeader">➕ Додавання у реєстр</div>
+            <div class="grid-2">
+                <div class="field-group" style="margin-bottom:6px;">
+                    <label for="mdlNewDriverRank">Військове звання *</label>
+                    <select id="mdlNewDriverRank"></select>
+                </div>
+                <div class="field-group" style="margin-bottom:6px;">
+                    <label for="mdlNewDriverPib">Прізвище Ім'я По батькові *</label>
+                    <input type="text" id="mdlNewDriverPib" placeholder="Напр. ІВАНЕНКО Іван Іванович">
+                </div>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#cbd5e1; cursor:pointer; margin-top:4px;">
+                <input type="checkbox" id="chkSaveDriverToDb" checked style="width:15px; height:15px;">
+                <span id="lblSaveDriverCheckText">Зберегти у реєстр підрозділу на майбутнє</span>
+            </label>
+        </div>
+
+        <div id="boxMdlRoute" class="field-group" style="margin-top:6px;">
+            <label>Маршрут руху (можна обрати 1 або декілька областей України) *</label>
+            <div style="display:flex; gap:6px;" id="boxRouteControls">
+                <select id="mdlRouteAdder" style="flex:1;">
+                    <option value="" selected disabled>-- Оберіть область, щоб додати до маршруту --</option>
+                </select>
+                <button type="button" class="btn btn-outline" onclick="addSelectedRegionToRoute()">+ Додати область</button>
+                <button type="button" class="btn btn-xs btn-outline" onclick="clearRouteTags()">Очистити</button>
+            </div>
+            <div class="route-tags-box" id="mdlRouteChips"></div>
+        </div>
+
+        <div id="boxMdlTrailersSection" class="field-group" style="margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label style="margin:0; color:#e9d5ff;">🔗 Причепи / напівпричепи до цього Дорожнього листа</label>
+                <button type="button" class="btn btn-xs btn-outline" id="btnToggleTrailerPicker" onclick="toggleTrailerPickerBox()" style="border-color:#a855f7; color:#e9d5ff;">🔗 + Додати причіп</button>
+            </div>
+
+            <div id="boxTrailerPicker" class="trailers-panel hidden">
+                <div style="font-size:0.78rem; color:#e9d5ff; margin-bottom:6px; font-weight:600;">Оберіть причіп зі списку причепів батальйону:</div>
+                <div style="display:flex; gap:6px;">
+                    <select id="selBattalionTrailers" style="flex:1; margin:0;"></select>
+                    <button type="button" class="btn btn-primary" onclick="attachSelectedTrailer()">Прикріпити</button>
+                </div>
+            </div>
+
+            <div id="mdlAttachedTrailersList"></div>
+        </div>
+
+        <div id="sectionClosingFields">
+            <div class="section-divider">
+                <span>2. Лічильники роботи (Одометр / Години та Хвилини)</span>
+            </div>
+
+            <div id="boxMdlCounters"></div>
+
+            <div class="section-divider">
+                <span>3. Рух ПММ (Пальне, Оливи та Спецрідини — Залишки в баках захищено 🔒)</span>
+                <button type="button" class="btn btn-xs btn-warn" id="btnToggleManualFuel" onclick="toggleManualFuelForm()">🎫 + Ручне внесення (Талон / Інша в/ч)</button>
+            </div>
+
+            <div id="boxManualFuelForm" class="manual-fuel-box hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <b style="color:#fbbf24; font-size:0.82rem;">🎫 Додавання зовнішньої заправки (поза відомостями бригади)</b>
+                    <button type="button" class="btn btn-xs btn-outline" onclick="toggleManualFuelForm()">Скасувати</button>
+                </div>
+                <div class="grid-3">
+                    <div class="field-group" style="margin-bottom:6px;">
+                        <label for="selManualSourceType">Джерело отримання *</label>
+                        <select id="selManualSourceType" onchange="onManualSourceTypeChange(this.value)">
+                            <option value="talon">🎫 Талон АЗС</option>
+                            <option value="other_unit">🏢 Інша військова частина</option>
+                        </select>
+                    </div>
+                    <div class="field-group hidden" id="boxManualUnitInput" style="margin-bottom:6px;">
+                        <label for="txtManualUnitCode">Номер в/ч (А + 4 цифри) *</label>
+                        <input type="text" id="txtManualUnitCode" value="А" maxlength="5" placeholder="А____" oninput="handleManualUnitMask(this)" style="font-weight:700; letter-spacing:0.05em;">
+                    </div>
+                    <div class="field-group" style="margin-bottom:6px;">
+                        <label for="dtManualFuelDate">Дата отримання *</label>
+                        <input type="date" id="dtManualFuelDate">
+                    </div>
+                    <div class="field-group" style="margin-bottom:6px;">
+                        <label for="numManualFuelQty">Кількість пального (л) *</label>
+                        <input type="number" id="numManualFuelQty" step="1" min="1" placeholder="Літрів...">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-xs btn-accent" onclick="confirmAddManualFuel()" style="width:100%; padding:6px;">✅ Додати у відомість листа</button>
+            </div>
+
+            <div id="mdlReceiptsList" style="margin-bottom:8px;"></div>
+
+            <div class="grid-4">
+                <div class="field-group">
+                    <label for="mdlStartFuel" id="lblMdlStartFuel">🔒 Залишок на початок (л)</label>
+                    <input type="number" id="mdlStartFuel" step="1" readonly title="Залишок у баку захищено від змін">
+                </div>
+                <div class="field-group">
+                    <label>Отримано пального (л)</label>
+                    <input type="text" id="mdlReceivedFuel" readonly style="color:#38bdf8; font-weight:700;">
+                </div>
+                <div class="field-group">
+                    <label for="mdlConsumedFuel">Витрачено пального (л) *</label>
+                    <input type="number" id="mdlConsumedFuel" step="1" min="0" oninput="recalcModalBalances()">
+                </div>
+                <div class="field-group">
+                    <label>🔒 Залишок на кінець (л)</label>
+                    <input type="text" id="mdlEndFuel" readonly style="color:#34d399; font-weight:700;" title="Розраховується автоматично">
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="field-group">
+                    <label for="mdlConsumedOil">Витрачено оливи (л)</label>
+                    <input type="number" id="mdlConsumedOil" step="0.1" min="0" value="0" oninput="recalcModalBalances()">
+                </div>
+                <div class="field-group">
+                    <label>🔒 Залишок оливи в баку (л)</label>
+                    <input type="text" id="mdlEndOil" readonly style="color:#fde047; font-weight:700;" title="Залишок оливи в баку захищено від ручних змін">
+                </div>
+                <div class="field-group">
+                    <label for="mdlConsumedLiquid">Витрачено спецрідин (л)</label>
+                    <input type="number" id="mdlConsumedLiquid" step="0.1" min="0" value="0" oninput="recalcModalBalances()">
+                </div>
+                <div class="field-group">
+                    <label>🔒 Залишок спецрідин (л)</label>
+                    <input type="text" id="mdlEndLiquid" readonly style="color:#86efac; font-weight:700;" title="Залишок спецрідин захищено від ручних змін">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:12px; margin-top:8px; flex-wrap:wrap;" id="mdlFooterBtns"></div>
+    </div>
+</div>
+
+<!-- МОДАЛЬНЕ ВІКНО СЛУЖБИ (СВТОЛ / ЕТС): РЕДАГУВАННЯ / ДОДАВАННЯ ТЕХНІКИ -->
+<div id="fleetModal" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width: 640px;">
+        <div class="modal-header">
+            <h3 id="mdlFleetTitle">🛠️ Редагування вихідних даних техніки</h3>
+            <button class="close-x" onclick="closeFleetModal()">×</button>
+        </div>
+
+        <div class="grid-3">
+            <div class="field-group">
+                <label for="flBat">Батальйон *</label>
+                <select id="flBat" onchange="onFleetBatChange()">
+                    <option value="1ЛБ">1ЛБ</option>
+                    <option value="2ЛБ">2ЛБ</option>
+                    <option value="3ЛБ">3ЛБ</option>
+                    <option value="4ЛБ">4ЛБ</option>
+                    <option value="5ЛБ">5ЛБ</option>
+                    <option value="1БПС">1БПС</option>
+                    <option value="2БПС">2БПС</option>
+                    <option value="Упр">Упр</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label for="flPidrozdil">Підрозділ (рота/взвод) *</label>
+                <select id="flPidrozdil"></select>
+            </div>
+            <div class="field-group">
+                <label for="flOvtIt">Категорія техніки *</label>
+                <select id="flOvtIt" onchange="onFleetTypeChange()"></select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="field-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label for="flVehNumber" id="lblFlVehNum">Військовий номер *</label>
+                    <span id="lblSuggestedNum" style="font-size:0.74rem; color:#38bdf8; cursor:pointer;" onclick="applySuggestedNumber()"></span>
+                </div>
+                <input type="text" id="flVehNumber" placeholder="Введіть номер..." style="font-weight:700; color:#38bdf8;">
+            </div>
+            <div class="field-group">
+                <label for="flMarka" id="lblFlMarka">Назва / Марка техніки *</label>
+                <input type="text" id="flMarka" placeholder="Напр: Mitsubishi L200">
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="field-group" id="boxFlEngineNum">
+                <label for="flEngineNum" style="color:#e9d5ff;">Номер генератора / двигуна</label>
+                <input type="text" id="flEngineNum" placeholder="Серійний № (напр: 2384)">
+            </div>
+            <div class="field-group" id="boxFlFuelType">
+                <label for="flFuelType">Тип пального *</label>
+                <select id="flFuelType">
+                    <option value="ДП">ДП (Дизель)</option>
+                    <option value="АБ">АБ (Бензин)</option>
+                </select>
+            </div>
+            <div class="field-group" id="boxFlNorma">
+                <label for="flNorma" id="lblFlNorma">Норма витрати (л/100км)</label>
+                <input type="number" id="flNorma" step="0.1" min="0" value="0">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="field-group" id="boxFlOdo">
+                <label for="flInitOdo">Початковий пробіг одометра (км)</label>
+                <input type="number" id="flInitOdo" step="1" min="0" value="0">
+            </div>
+            <div class="field-group" id="boxFlMoto">
+                <label for="flInitMoto">Початкові мотогодини (м/г)</label>
+                <input type="number" id="flInitMoto" step="0.1" min="0" value="0">
+            </div>
+        </div>
+
+        <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:10px;">
+            ℹ️ Підрозділ, батальйон та залишки ПММ (пальне, оливи, спецрідини) у баках захищені від змін.
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
+            <button type="button" class="btn btn-outline" onclick="closeFleetModal()">Скасувати</button>
+            <button type="button" class="btn btn-accent" onclick="saveFleetVehicle()">💾 Зберегти у базі даних</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('wheel', function(e) {
+        if (document.activeElement && document.activeElement.type === 'number') {
+            document.activeElement.blur();
+        }
+    }, { passive: true });
+
+    const API_BASE = 'https://n8n.pmm-system.com/webhook/v4';
+    const API = {
+        initTerminal:    `${API_BASE}/waybill-init-data`,
+        getNextNumber:   `${API_BASE}/waybill-get-next-number`,
+        openWaybill:     `${API_BASE}/waybill-open`,
+        closeWaybill:    `${API_BASE}/waybill-close`,
+        getJournal:      `${API_BASE}/waybill-journal`,
+        getReviewQueue:  `${API_BASE}/waybill-review-queue`,
+        reviewAction:    `${API_BASE}/waybill-review-action`,
+        saveVehicle:     `${API_BASE}/waybill-save-vehicle`
+    };
+
+    const ROMAN_PERIODS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+    let session = null;
+    let terminalData = {
+        periods_count: 2,
+        all_months: [],
+        vehicles: [],
+        trailers: [],
+        subunits: [],
+        drivers: [],
+        lra_operators: [],
+        pending_fuelings: [],
+        ranks: [],
+        routes: [],
+        periods_dates: {}
+    };
+
+    let journalRows = [];
+    let mergedChessboard = [];
+    let sortField = 'pidrozdil';
+    let sortAsc = true;
+
+    let revQueueSortField = 'pidrozdil';
+    let revQueueSortAsc = true;
+    let revArchiveSortField = 'pidrozdil';
+    let revArchiveSortAsc = true;
+    let revFleetSortField = 'pidrozdil';
+    let revFleetSortAsc = true;
+
+    let activeModalItem = null;
+    let activeModalMode = 'open';
+    let isModalReadOnly = false;
+    let isManualDriverMode = false;
+    let selectedRouteRegions = [];
+    let modalReceipts = [];
+    let modalTrailers = [];
+
+    let reviewerQueueCache = [];
+    let reviewerArchiveCache = [];
+    let fleetCache = [];
+    let allSubunitsCache = [];
+    let editingFleetItem = null;
+    let suggestedFleetNum = '';
+
+    function isReviewer() {
+        return (session && (session.operator_type === 'СВТОЛ' || session.operator_type === 'ЕТС'));
+    }
+
+    function isUprSubunitUser() {
+        return Boolean(session && session.bat === 'Упр' && session.pidrozdil && session.pidrozdil !== 'ALL');
+    }
+
+    // Стартові показники та залишки в баках у цій формі НЕ може змінювати ніхто і ніде
+    function canEditStartingCounters() {
+        return false;
+    }
+
+    function checkWaybillSession() {
+        const stored = sessionStorage.getItem('pmm_waybill_session');
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (stored) {
+            session = JSON.parse(stored);
+        } else if (urlParams.get('bat') && urlParams.get('type') && urlParams.get('month_key')) {
+            session = {
+                bat: urlParams.get('bat'),
+                pidrozdil: urlParams.get('pidrozdil') || 'ALL',
+                operator_type: urlParams.get('type'),
+                month_key: urlParams.get('month_key'),
+                can_edit: urlParams.get('can_edit') === 'true' || urlParams.get('can_edit') === '1'
+            };
+            sessionStorage.setItem('pmm_waybill_session', JSON.stringify(session));
+        } else {
+            window.location.href = 'index_waybill.html';
+            return false;
+        }
+
+        if (!session.pidrozdil) session.pidrozdil = 'ALL';
+        const dispBat = isUprSubunitUser() ? `${session.pidrozdil} (Упр)` : session.bat;
+
+        document.getElementById('tagBat').innerText = `Підрозділ/Бат: ${dispBat}`;
+        document.getElementById('tagRole').innerText = `Напрямок: ${session.operator_type}`;
+        document.getElementById('tagMonth').innerText = `Місяць: ${session.month_key}`;
+
+        if (isReviewer() && session.can_edit) {
+            document.getElementById('tagCanEdit').classList.remove('hidden');
+        }
+        return true;
+    }
+
+    function logoutWaybill() {
+        sessionStorage.removeItem('pmm_waybill_session');
+        window.location.href = 'index_waybill.html';
+    }
+
+    async function initApp() {
+        if (!checkWaybillSession()) return;
+
+        if (isReviewer()) {
+            document.getElementById('operatorTabsBar').classList.add('hidden');
+            document.getElementById('operatorContainer').classList.add('hidden');
+            document.getElementById('reviewerTabsBar').classList.remove('hidden');
+            document.getElementById('reviewerContainer').classList.remove('hidden');
+
+            const isSvtol = (session.operator_type === 'СВТОЛ');
+            document.getElementById('lblMainTitle').innerText = isSvtol
+                ? '🛠️ СВТОЛ — Верифікація Дорожніх листів, Архів та Реєстр ОВТ'
+                : '⚡ ЕТС — Верифікація Листів роботи агрегатів, Архів та Реєстр ІТ';
+            document.getElementById('btnRevTabFleet').innerText = isSvtol
+                ? '🚗 Реєстр ОВТ та Причепів'
+                : '⚡ Реєстр генераторів ІТ';
+
+            renderReviewerTableHeaders(isSvtol, 'tblReviewerHead', false);
+            renderReviewerTableHeaders(isSvtol, 'tblArchiveHead', true);
+            await Promise.all([loadReviewerFleet(), loadReviewerQueue()]);
+            initArchiveMonthSelector();
+            initHistoryFilters();
+        } else {
+            document.getElementById('reviewerTabsBar').classList.add('hidden');
+            document.getElementById('reviewerContainer').classList.add('hidden');
+            document.getElementById('operatorTabsBar').classList.remove('hidden');
+            document.getElementById('operatorContainer').classList.remove('hidden');
+
+            const isDL = (session.operator_type === 'ДЛ');
+            const unitTitle = isUprSubunitUser() ? `${session.pidrozdil} (Упр)` : session.bat;
+            document.getElementById('lblMainTitle').innerText = isDL
+                ? `🚗 Реєстр ОВТ та Дорожніх листів — ${unitTitle}`
+                : `⚡ Реєстр ІТ та Листів роботи агрегатів — ${unitTitle}`;
+
+            if (isUprSubunitUser()) {
+                document.getElementById('unitSubmodeBanner').classList.remove('hidden');
+            }
+
+            await loadTerminalInitialData();
+            initHistoryFilters();
+        }
+    }
+
+    function switchOperatorTab(tab) {
+        document.getElementById('btnOpTabChess').classList.toggle('active', tab === 'chess');
+        document.getElementById('btnOpTabHistory').classList.toggle('active', tab === 'history');
+        document.getElementById('operatorContainer').classList.toggle('hidden', tab !== 'chess');
+        document.getElementById('sharedHistorySection').classList.toggle('hidden', tab !== 'history');
+        if (tab === 'history') populateHistoryVehicleSelect();
+    }
+
+    function switchReviewerTab(tab) {
+        document.getElementById('btnRevTabQueue').classList.toggle('active', tab === 'queue');
+        document.getElementById('btnRevTabArchive').classList.toggle('active', tab === 'archive');
+        document.getElementById('btnRevTabFleet').classList.toggle('active', tab === 'fleet');
+        document.getElementById('btnRevTabHistory').classList.toggle('active', tab === 'history');
+
+        document.getElementById('reviewerContainer').classList.toggle('hidden', tab === 'history');
+        document.getElementById('revQueueSection').classList.toggle('hidden', tab !== 'queue');
+        document.getElementById('revArchiveSection').classList.toggle('hidden', tab !== 'archive');
+        document.getElementById('revFleetSection').classList.toggle('hidden', tab !== 'fleet');
+        document.getElementById('sharedHistorySection').classList.toggle('hidden', tab !== 'history');
+
+        if (tab === 'archive') loadReviewerArchive();
+        if (tab === 'history') populateHistoryVehicleSelect();
+    }
+
+    async function loadTerminalInitialData() {
+        try {
+            const resp = await fetch(`${API.initTerminal}?bat=${encodeURIComponent(session.bat)}&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}`);
+            if (resp.ok) {
+                const res = await resp.json();
+                terminalData = res.data || res;
+                allSubunitsCache = terminalData.subunits || [];
+
+                const selPer = document.getElementById('selPeriod');
+                selPer.innerHTML = '';
+                const pCount = terminalData.periods_count || 2;
+                for (let i = 0; i < pCount; i++) {
+                    selPer.add(new Option(`Період ${ROMAN_PERIODS[i]}`, ROMAN_PERIODS[i]));
+                }
+
+                if (isUprSubunitUser()) {
+                    terminalData.vehicles = (terminalData.vehicles || []).filter(v => v.pidrozdil === session.pidrozdil);
+                    const selPidr = document.getElementById('selFilterPidrozdil');
+                    selPidr.innerHTML = `<option value="${session.pidrozdil}" selected>${session.pidrozdil} (Упр)</option>`;
+                    selPidr.disabled = true;
+                } else {
+                    const selPidr = document.getElementById('selFilterPidrozdil');
+                    const units = [...new Set((terminalData.vehicles || []).map(v => v.pidrozdil).filter(Boolean))].sort();
+                    selPidr.innerHTML = '<option value="ALL">Усі підрозділи (' + units.length + ')</option>';
+                    units.forEach(u => selPidr.add(new Option(u, u)));
+                    selPidr.disabled = false;
+                }
+
+                populateRanksAndRoutesDropdowns();
+                await refreshAllData();
+            }
+        } catch (e) {
+            console.error('Помилка ініціалізації:', e);
+        }
+    }
+
+    function populateRanksAndRoutesDropdowns() {
+        const selRank = document.getElementById('mdlNewDriverRank');
+        selRank.innerHTML = '';
+        const ranksList = (terminalData.ranks && terminalData.ranks.length > 0)
+            ? terminalData.ranks
+            : [
+                { short_name: 'солдат', name: 'солдат' },
+                { short_name: 'ст. солдат', name: 'старший солдат' },
+                { short_name: 'мол. сержант', name: 'молодший сержант' },
+                { short_name: 'сержант', name: 'сержант' },
+                { short_name: 'ст. сержант', name: 'старший сержант' },
+                { short_name: 'штаб-сержант', name: 'штаб-сержант' },
+                { short_name: 'лейтенант', name: 'лейтенант' },
+                { short_name: 'ст. лейтенант', name: 'старший лейтенант' }
+            ];
+        ranksList.forEach(rk => {
+            const fullRankLower = String(rk.name || '').trim().toLowerCase();
+            selRank.add(new Option(`${rk.name} (${rk.short_name})`, fullRankLower));
+        });
+        selRank.value = 'солдат';
+
+        const selRoute = document.getElementById('mdlRouteAdder');
+        selRoute.innerHTML = '<option value="" selected disabled>-- Оберіть область, щоб додати --</option>';
+        (terminalData.routes || []).forEach(r => selRoute.add(new Option(r.region_name, r.region_name)));
+    }
+
+    async function refreshAllData() {
+        try {
+            const [respInit, respJour] = await Promise.all([
+                fetch(`${API.initTerminal}?bat=${encodeURIComponent(session.bat)}&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}`),
+                fetch(`${API.getJournal}?bat=${encodeURIComponent(session.bat)}&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}`)
+            ]);
+            if (respInit.ok) {
+                const rI = await respInit.json();
+                const dI = rI.data || rI;
+                let vehs = dI.vehicles || terminalData.vehicles;
+                if (isUprSubunitUser()) {
+                    vehs = vehs.filter(v => v.pidrozdil === session.pidrozdil);
+                }
+                terminalData.vehicles = vehs;
+                terminalData.pending_fuelings = dI.pending_fuelings || [];
+                terminalData.trailers = dI.trailers || terminalData.trailers || [];
+                terminalData.subunits = dI.subunits || terminalData.subunits || [];
+                terminalData.drivers = dI.drivers || terminalData.drivers;
+                terminalData.lra_operators = dI.lra_operators || terminalData.lra_operators;
+                terminalData.periods_dates = dI.periods_dates || terminalData.periods_dates || {};
+                terminalData.all_months = dI.all_months || terminalData.all_months || [];
+            }
+            if (respJour.ok) {
+                const res = await respJour.json();
+                journalRows = res.rows || [];
+            }
+        } catch (e) {
+            console.error('Помилка оновлення:', e);
+        }
+        buildMergedChessboard();
+        renderChessboardTable();
+    }
+
+    function onPeriodChange() {
+        buildMergedChessboard();
+        renderChessboardTable();
+    }
+
+    function computeCarryoverState(vehicle, targetPeriod) {
+        const isDL = (session.operator_type === 'ДЛ' || session.operator_type === 'СВТОЛ');
+        const targetIdx = ROMAN_PERIODS.indexOf(targetPeriod);
+
+        let state = {
+            odo: Number(vehicle.ostanni_pokaznyky_odometra || 0),
+            moto: Number(vehicle.pokaznyk_lichylnyka_motohodyn || 0),
+            fuel: Number(vehicle.zalyshok_v_batsi_total || 0),
+            oil: Number(vehicle.olyva_zalyshok_total || 0),
+            liquid: Number(vehicle.ridyna_zalyshok_total || 0),
+            prevDocNum: vehicle.ostanniy_nomer_dl || 'немає',
+            lastRank: vehicle.prev_drv_zvanya || vehicle.prev_op_zvanya || '',
+            lastPib: vehicle.prev_drv_pib || vehicle.prev_op_pib || '',
+            lastRank2: vehicle.prev_drv2_zvanya || '',
+            lastPib2: vehicle.prev_drv2_pib || '',
+            lastRoute: vehicle.prev_route || 'Миколаївська область',
+            lastTrailers: [],
+            hasUnclosedPrev: false,
+            unclosedPeriodName: ''
+        };
+
+        for (let i = 0; i < targetIdx; i++) {
+            const pName = ROMAN_PERIODS[i];
+            const prevWb = journalRows.find(r => r.id_ovt_it == vehicle.id_ovt_it && r.period === pName);
+            if (prevWb) {
+                if (prevWb.status === 'open') {
+                    state.hasUnclosedPrev = true;
+                    state.unclosedPeriodName = pName;
+                }
+                if (isDL) {
+                    const endOdo = Number(prevWb.pokaznyky_odometra_povernennya || 0);
+                    const startOdo = Number(prevWb.pokaznyky_odometra_vyizd || state.odo);
+                    state.odo = (endOdo >= startOdo && endOdo > 0) ? endOdo : startOdo;
+                }
+                const endMoto = Number(prevWb.pokaznyky_motohodyn_kinets || 0);
+                const startMoto = Number(prevWb.pokaznyky_motohodyn_pochatok || state.moto);
+                state.moto = (endMoto >= startMoto && endMoto > 0) ? endMoto : startMoto;
+
+                state.fuel = Number(prevWb.palne_na_kinets ?? state.fuel);
+                state.oil = Number(prevWb.olyva_na_kinets ?? state.oil);
+                state.liquid = Number(prevWb.ridyna_na_kinets ?? state.liquid);
+
+                state.prevDocNum = prevWb.nomer_dl || prevWb.nomer_lra || state.prevDocNum;
+                state.lastRank = prevWb.driver_zvanya || prevWb.operator_zvanya || state.lastRank;
+                state.lastPib = prevWb.driver_pib || prevWb.operator_pib || state.lastPib;
+                state.lastRank2 = prevWb.driver2_zvanya || state.lastRank2;
+                state.lastPib2 = prevWb.driver2_pib || state.lastPib2;
+                state.lastRoute = prevWb.route || state.lastRoute;
+                if (Array.isArray(prevWb.trailers_json) && prevWb.trailers_json.length > 0) {
+                    state.lastTrailers = prevWb.trailers_json.map(t => ({ ...t, proideno_km: 0 }));
+                }
+            }
+        }
+        return state;
+    }
+
+    function buildMergedChessboard() {
+        const curPeriod = document.getElementById('selPeriod').value;
+        const isDL = (session.operator_type === 'ДЛ');
+        let pencilVehiclesList = [];
+
+        mergedChessboard = (terminalData.vehicles || []).map(v => {
+            const carryover = computeCarryoverState(v, curPeriod);
+            const wb = journalRows.find(r => r.id_ovt_it == v.id_ovt_it && r.period === curPeriod);
+
+            const rawRvForVeh = (terminalData.pending_fuelings || []).filter(pf => pf.id_ovt_it == v.id_ovt_it && pf.period === curPeriod);
+            const seenFuelIds = new Set();
+            const rvForVeh = rawRvForVeh.filter(pf => {
+                const uniqueKey = pf.fueling_id
+                    ? `id_${pf.fueling_id}`
+                    : `${pf.vidomist_num || ''}_${pf.date || ''}_${pf.category || ''}_${pf.item_type || ''}_${pf.quantity || ''}`;
+                if (seenFuelIds.has(uniqueKey)) return false;
+                seenFuelIds.add(uniqueKey);
+                return true;
+            });
+
+            const rvFuelSum = rvForVeh
+                .filter(pf => pf.category === 'fuel' || !pf.category)
+                .reduce((acc, pf) => acc + (Number(pf.quantity) || 0), 0);
+
+            let status = wb ? wb.status : (rvFuelSum > 0 ? 'pencil' : 'none');
+            if (status === 'pencil') {
+                pencilVehiclesList.push(`${v.viyskovyi_nomer} (+${Math.round(rvFuelSum)} л)`);
+            }
+
+            const docNum = wb ? (wb.nomer_dl || wb.nomer_lra || '') : '';
+            const driverFull = wb
+                ? `${wb.driver_zvanya || wb.operator_zvanya || ''} ${wb.driver_pib || wb.operator_pib || ''}`.trim()
+                : '';
+            const route = wb ? (wb.route || '') : '';
+            const trailers = (wb && Array.isArray(wb.trailers_json)) ? wb.trailers_json : [];
+
+            const counterStart = wb
+                ? (isDL ? Number(wb.pokaznyky_odometra_vyizd || carryover.odo) : Number(wb.pokaznyky_motohodyn_pochatok || carryover.moto))
+                : (isDL ? carryover.odo : carryover.moto);
+
+            const counterEnd = wb
+                ? (isDL ? Number(wb.pokaznyky_odometra_povernennya || counterStart) : Number(wb.pokaznyky_motohodyn_kinets || counterStart))
+                : counterStart;
+
+            const counterDiff = wb
+                ? (isDL ? Number(wb.proideno_km || 0) : Number(wb.vidpratsyovano_motohodyn || 0))
+                : 0;
+
+            const fuelStart = wb ? Number(wb.palne_na_pochatok ?? carryover.fuel) : carryover.fuel;
+            const fuelRec = wb ? Number(wb.nadano_palnoho || rvFuelSum) : rvFuelSum;
+            const fuelCons = wb ? Number(wb.vytracheno_palnoho || 0) : 0;
+            const fuelEnd = wb ? Number(wb.palne_na_kinets ?? (fuelStart + fuelRec - fuelCons)) : (fuelStart + fuelRec);
+
+            return {
+                vehicle: v,
+                waybill: wb || null,
+                carryover: carryover,
+                rvRecords: rvForVeh,
+                rvFuelSum: rvFuelSum,
+                trailers: trailers,
+                id_ovt_it: v.id_ovt_it,
+                pidrozdil: v.pidrozdil || '',
+                viyskovyi_nomer: v.viyskovyi_nomer || '',
+                marka_tekhniky: v.marka_tekhniky || '',
+                nomer_dvyhuna: v.nomer_dvyhuna || '',
+                palne_typ: v.palne_typ || '',
+                status: status,
+                docNum: docNum,
+                driverFull: driverFull,
+                route: route,
+                counterStart: counterStart,
+                counterEnd: counterEnd,
+                counterDiff: counterDiff,
+                fuelStart: fuelStart,
+                fuelRec: fuelRec,
+                fuelCons: fuelCons,
+                fuelEnd: fuelEnd
+            };
+        });
+
+        const topAlert = document.getElementById('topPencilAlert');
+        if (pencilVehiclesList.length > 0) {
+            topAlert.classList.remove('hidden');
+            const actionHint = isUprSubunitUser()
+                ? 'Зверніться до Управління для відкриття номера листа, після чого ви зможете внести дані та закрити лист!'
+                : 'Відкрийте лист, щоб номер автоматично синхронізувався!';
+            topAlert.innerHTML = `
+                <div>⛽ <b>Заправка «на олівець» (Період ${curPeriod}):</b> За відомостями заправників уже видано пальне на техніку без відкритого листа: <b>${pencilVehiclesList.join(', ')}</b>. ${actionHint}</div>
+                <button class="btn btn-xs btn-warn" onclick="setQuickStatusFilter('pencil')">Показати (${pencilVehiclesList.length})</button>
+            `;
+        } else {
+            topAlert.classList.add('hidden');
+        }
+
+        updateStatsPills();
+    }
+
+    function updateStatsPills() {
+        const counts = { all: mergedChessboard.length, pencil: 0, none: 0, open: 0, pending_review: 0, rework: 0, approved: 0 };
+        mergedChessboard.forEach(item => {
+            if (counts[item.status] !== undefined) counts[item.status]++;
+        });
+
+        const bar = document.getElementById('statsPillsBar');
+        bar.innerHTML = `
+            <span class="stat-pill sp-all" onclick="setQuickStatusFilter('ALL')">Всього: ${counts.all}</span>
+            ${counts.pencil > 0 ? `<span class="stat-pill sp-pencil" onclick="setQuickStatusFilter('pencil')">⛽ На олівець: ${counts.pencil}</span>` : ''}
+            <span class="stat-pill sp-none" onclick="setQuickStatusFilter('none')">⚪ Не відкрито: ${counts.none}</span>
+            <span class="stat-pill sp-open" onclick="setQuickStatusFilter('open')">🟢 У роботі: ${counts.open}</span>
+            <span class="stat-pill sp-pending" onclick="setQuickStatusFilter('pending_review')">🟡 На перевірці: ${counts.pending_review}</span>
+            <span class="stat-pill sp-rework" onclick="setQuickStatusFilter('rework')">🔴 Доопрацювати: ${counts.rework}</span>
+            <span class="stat-pill sp-approved" onclick="setQuickStatusFilter('approved')">✅ Затверджено: ${counts.approved}</span>
+        `;
+    }
+
+    function setQuickStatusFilter(st) {
+        document.getElementById('selFilterStatus').value = st;
+        renderChessboardTable();
+    }
+
+    function sortByColumn(field) {
+        if (sortField === field) {
+            sortAsc = !sortAsc;
+        } else {
+            sortField = field;
+            sortAsc = true;
+        }
+        renderChessboardTable();
+    }
+
+    function handleRowDblClick(id_ovt_it, status) {
+        if (status === 'approved') {
+            openWaybillModal(id_ovt_it, 'view_only');
+            return;
+        }
+        if (status === 'none' || status === 'pencil') {
+            if (isUprSubunitUser()) {
+                alert('Відкриття нових листів (присвоєння номера ДЛ/ЛРА) здійснює Управління бригади. Після відкриття листа Управлінням ви зможете внести дані та закрити його.');
+                return;
+            }
+            openWaybillModal(id_ovt_it, 'open');
+        } else if (status === 'open' || status === 'rework') {
+            openWaybillModal(id_ovt_it, 'close');
+        } else if (status === 'pending_review') {
+            openWaybillModal(id_ovt_it, 'edit');
+        }
+    }
+
+    function formatMotoHoursReadable(decimalHours) {
+        const val = Number(decimalHours || 0);
+        const h = Math.floor(val + 1e-6);
+        const m = Math.round((val - h) * 60);
+        if (m === 0) return `${h} м/г`;
+        return `${val.toFixed(2)} м/г (${h}г ${m}хв)`;
+    }
+
+    function renderChessboardTable() {
+        const isDL = (session.operator_type === 'ДЛ');
+        const isSubunitOnly = isUprSubunitUser();
+        const thead = document.getElementById('tblChessHead');
+        const tbody = document.getElementById('tblChessBody');
+
+        thead.innerHTML = `
+            <th>№</th>
+            <th onclick="sortByColumn('pidrozdil')">Підр. ⇅</th>
+            <th onclick="sortByColumn('viyskovyi_nomer')">Військ. № ⇅</th>
+            <th onclick="sortByColumn('marka_tekhniky')">${isDL ? 'Назва ОВТ / Причіп' : 'Назва ІТ (№ двиг.)'} ⇅</th>
+            <th onclick="sortByColumn('status')">Статус ⇅</th>
+            <th onclick="sortByColumn('docNum')">№ ${isDL ? 'ДЛ' : 'ЛРА'} ⇅</th>
+            <th onclick="sortByColumn('driverFull')">${isDL ? 'Водії' : 'Відповідальний'} ⇅</th>
+            ${isDL ? '<th onclick="sortByColumn(\'route\')">Маршрут ⇅</th>' : ''}
+            <th onclick="sortByColumn('counterStart')">${isDL ? 'Виїзд' : 'Поч. м/г'} ⇅</th>
+            <th onclick="sortByColumn('counterEnd')">${isDL ? 'Поверн.' : 'Кін. м/г'} ⇅</th>
+            <th onclick="sortByColumn('counterDiff')">${isDL ? 'Пройд.' : 'Відпр.'} ⇅</th>
+            <th onclick="sortByColumn('fuelStart')">На поч. ⇅</th>
+            <th onclick="sortByColumn('fuelRec')">Отрим. ⇅</th>
+            <th onclick="sortByColumn('fuelCons')">Витрач. ⇅</th>
+            <th onclick="sortByColumn('fuelEnd')">Залишок ⇅</th>
+            <th>Дії</th>
+        `;
+
+        const fPidr = document.getElementById('selFilterPidrozdil').value;
+        const fStatus = document.getElementById('selFilterStatus').value;
+        const q = (document.getElementById('txtSearch').value || '').trim().toLowerCase();
+
+        let filtered = mergedChessboard.filter(item => {
+            if (fPidr !== 'ALL' && item.pidrozdil !== fPidr) return false;
+            if (fStatus !== 'ALL' && item.status !== fStatus) return false;
+            if (q) {
+                const trText = (item.trailers || []).map(t => `${t.viyskovyi_nomer} ${t.marka_tekhniky}`).join(' ');
+                const hay = `${item.pidrozdil} ${item.viyskovyi_nomer} ${item.marka_tekhniky} ${item.nomer_dvyhuna} ${item.docNum} ${item.driverFull} ${item.route} ${trText}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let vA = a[sortField], vB = b[sortField];
+            if (typeof vA === 'string') {
+                return sortAsc ? vA.localeCompare(vB, 'uk', { numeric: true }) : vB.localeCompare(vA, 'uk', { numeric: true });
+            }
+            return sortAsc ? (vA - vB) : (vB - vA);
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="16" style="padding:18px; color:#94a3b8;">За обраними фільтрами техніки не знайдено.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((item, idx) => {
+            let badge = '';
+            let actionsHtml = '';
+            let rowClass = '';
+            const histBtn = `<button class="btn btn-xs btn-outline" title="Паспорт-історія машини" onclick="event.stopPropagation(); jumpToVehicleHistory(${item.id_ovt_it})">📖</button>`;
+
+            if (item.status === 'pencil') {
+                rowClass = 'row-pencil';
+                badge = `<span class="status-badge status-pencil" title="Є заправка без відкритого листа!">⛽ На олівець (+${Math.round(item.rvFuelSum)}л)</span>`;
+                actionsHtml = isSubunitOnly
+                    ? `<span style="font-size:0.7rem; color:#fde047;">Очікує відкриття Упр</span> ${histBtn}`
+                    : `<button class="btn btn-xs btn-warn" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'open')">➕ Відкрити</button> ${histBtn}`;
+            } else if (item.status === 'none') {
+                badge = '<span class="status-badge status-none">⚪ Не відкрито</span>';
+                actionsHtml = isSubunitOnly
+                    ? `<span style="font-size:0.7rem; color:#64748b;">Очікує Упр</span> ${histBtn}`
+                    : `<button class="btn btn-xs btn-primary" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'open')">➕ Відкрити</button> ${histBtn}`;
+            } else if (item.status === 'open') {
+                badge = '<span class="status-badge status-open">🟢 Відкритий</span>';
+                actionsHtml = `
+                    <button class="btn btn-xs btn-accent" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'close')">🔒 Закрити</button>
+                    ${!isSubunitOnly ? `<button class="btn btn-xs btn-outline" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'edit')">✏️</button>` : ''}
+                    ${histBtn}
+                `;
+            } else if (item.status === 'pending_review') {
+                badge = '<span class="status-badge status-pending">🟡 На перевірці</span>';
+                actionsHtml = `<button class="btn btn-xs btn-outline" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'edit')">✏️ Ред.</button> ${histBtn}`;
+            } else if (item.status === 'rework') {
+                rowClass = 'row-rework';
+                badge = `<span class="status-badge status-rework" title="${item.waybill?.review_comment || ''}">🔴 Доопрацювати</span>`;
+                actionsHtml = `<button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); openWaybillModal(${item.id_ovt_it}, 'close')">🛠️ Випр.</button> ${histBtn}`;
+            } else if (item.status === 'approved') {
+                badge = '<span class="status-badge status-approved">✅ Затверджено</span>';
+                actionsHtml = `<span style="font-size:0.72rem; color:#34d399;">Проведено</span> ${histBtn}`;
+            }
+
+            const uom = isDL ? 'км' : 'м/г';
+            const cStart = isDL ? Math.round(item.counterStart) : Number(item.counterStart).toFixed(1).replace(/\.0$/, '');
+            const cEnd = isDL ? Math.round(item.counterEnd) : Number(item.counterEnd).toFixed(1).replace(/\.0$/, '');
+            const cDiffDisplay = isDL
+                ? (Math.round(item.counterDiff) + ' км')
+                : formatMotoHoursReadable(item.counterDiff);
+
+            const trBadges = (isDL && item.trailers && item.trailers.length > 0)
+                ? item.trailers.map(t => `<span class="trailer-tag-inline" title="Причіп: ${t.marka_tekhniky || ''}">🔗 ${t.viyskovyi_nomer}${t.proideno_km > 0 ? ' (' + Math.round(t.proideno_km) + ' км)' : ''}</span>`).join('')
+                : '';
+
+            const engBadge = (!isDL && item.nomer_dvyhuna)
+                ? ` <span style="color:#e9d5ff; font-size:0.72rem;">[№${item.nomer_dvyhuna}]</span>`
+                : '';
+
+            return `
+                <tr class="${rowClass}" ondblclick="handleRowDblClick(${item.id_ovt_it}, '${item.status}')" title="Подвійний клік — відкрити картку">
+                    <td>${idx + 1}</td>
+                    <td><b>${item.pidrozdil}</b></td>
+                    <td><b style="color:#38bdf8;">${item.viyskovyi_nomer}</b></td>
+                    <td style="text-align:left; max-width:220px; overflow:hidden; text-overflow:ellipsis;" title="${item.marka_tekhniky}">${item.marka_tekhniky}${engBadge} <small style="color:#94a3b8;">(${item.palne_typ})</small>${trBadges}</td>
+                    <td>${badge}</td>
+                    <td><b>${item.docNum || '-'}</b></td>
+                    <td style="text-align:left; max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="${item.driverFull}">${item.driverFull || '-'}</td>
+                    ${isDL ? `<td style="text-align:left; max-width:135px; overflow:hidden; text-overflow:ellipsis;" title="${item.route}">${item.route || '-'}</td>` : ''}
+                    <td>${cStart} ${uom}</td>
+                    <td>${item.waybill ? (cEnd + ' ' + uom) : '-'}</td>
+                    <td><b style="color:${item.counterDiff > 0 ? '#38bdf8' : '#94a3b8'};">${item.waybill ? cDiffDisplay : '-'}</b></td>
+                    <td><b>${Math.round(item.fuelStart)} л</b></td>
+                    <td style="color:#38bdf8; font-weight:700;">${item.fuelRec > 0 ? '+' + Math.round(item.fuelRec) + ' л' : '0 л'}</td>
+                    <td style="color:#fbbf24;">${item.fuelCons > 0 ? '-' + Math.round(item.fuelCons) + ' л' : '0 л'}</td>
+                    <td><b style="color:#34d399;">${Math.round(item.fuelEnd)} л</b></td>
+                    <td>${actionsHtml}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function checkDocNumberDuplicate(docNum, currentVehId, currentWorkId) {
+        const isDL = (session.operator_type === 'ДЛ' || session.operator_type === 'СВТОЛ');
+        const cleanDoc = String(docNum || '').trim();
+        if (!cleanDoc) return false;
+
+        const duplicate = journalRows.find(r => {
+            const rDoc = String(isDL ? r.nomer_dl : (r.nomer_lra || '')).trim();
+            if (rDoc !== cleanDoc) return false;
+            if (currentWorkId && r.id == currentWorkId) return false;
+            if (!currentWorkId && r.id_ovt_it == currentVehId) return false;
+            return true;
+        });
+
+        if (duplicate) {
+            alert(`❌ ДУБЛІКАТ НОМЕРА:\nНомер ${isDL ? 'ДЛ' : 'ЛРА'} № ${cleanDoc} уже зайнятий технікою ${duplicate.viyskovyi_nomer} (${duplicate.marka_tekhniky}, Період ${duplicate.period}) у батальйоні!`);
+            return true;
+        }
+        return false;
+    }
+
+    function subtractOneDayStr(dateStr) {
+        const clean = dateStr.split('T')[0];
+        const parts = clean.split('-');
+        const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        dt.setDate(dt.getDate() - 1);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function resolveMonthBoundsFromKey(monthKey, datesObj) {
+        const mParts = (monthKey || '11_2026').split('_');
+        const mNum = parseInt(mParts[0], 10) || 11;
+        const yNum = parseInt(mParts[1], 10) || 2026;
+
+        let startStr = '';
+        if (datesObj && datesObj.month_start_date) startStr = datesObj.month_start_date.split('T')[0];
+        else if (datesObj && datesObj.start_date) startStr = datesObj.start_date.split('T')[0];
+        else if (datesObj && datesObj.p_1_start) startStr = datesObj.p_1_start.split('T')[0];
+        else {
+            const prevM = mNum === 1 ? 12 : mNum - 1;
+            const prevY = mNum === 1 ? yNum - 1 : yNum;
+            startStr = `${prevY}-${String(prevM).padStart(2, '0')}-26`;
+        }
+
+        let endStr = '';
+        if (datesObj && datesObj.month_end_date) endStr = datesObj.month_end_date.split('T')[0];
+        else if (datesObj && datesObj.end_date) endStr = datesObj.end_date.split('T')[0];
+        else endStr = `${yNum}-${String(mNum).padStart(2, '0')}-25`;
+
+        return { startStr, endStr };
+    }
+
+    function setModalInputsReadOnly(isReadOnly) {
+        isModalReadOnly = isReadOnly;
+        const ids = ['mdlDocNumber', 'mdlDriverSelect', 'mdlDriver2Select', 'mdlDateStart', 'mdlDateEnd', 'mdlOdoEnd', 'mdlMotoWorkedHours', 'mdlMotoWorkedMins', 'mdlConsumedFuel', 'mdlConsumedOil', 'mdlConsumedLiquid'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.tagName === 'SELECT') el.disabled = isReadOnly;
+            else el.readOnly = isReadOnly;
+        });
+
+        // Стартові показники та початкові залишки в баках ЗАВЖДИ заблоковані для всіх ролей!
+        ['mdlOdoStart', 'mdlMotoStart', 'mdlStartFuel', 'mdlEndFuel', 'mdlEndOil', 'mdlEndLiquid'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.readOnly = true;
+        });
+
+        document.getElementById('btnToggleNewDriver').classList.toggle('hidden', isReadOnly);
+        document.getElementById('boxRouteControls').classList.toggle('hidden', isReadOnly);
+        document.getElementById('btnToggleTrailerPicker').classList.toggle('hidden', isReadOnly);
+        document.getElementById('btnToggleManualFuel').classList.toggle('hidden', isReadOnly);
+    }
+
+    // ВІДКРИТТЯ МОДАЛЬНОГО ВІКНА ДЛ / ЛРА
+    async function openWaybillModal(id_ovt_it, mode, reviewerRowObj = null) {
+        const isDL = (session.operator_type === 'ДЛ' || session.operator_type === 'СВТОЛ');
+
+        if (reviewerRowObj) {
+            const foundVeh = fleetCache.find(x => x.id_ovt_it == reviewerRowObj.id_ovt_it) || {
+                id_ovt_it: reviewerRowObj.id_ovt_it,
+                viyskovyi_nomer: reviewerRowObj.viyskovyi_nomer,
+                marka_tekhniky: reviewerRowObj.marka_tekhniky,
+                pidrozdil: reviewerRowObj.pidrozdil,
+                bat: reviewerRowObj.bat,
+                palne_typ: reviewerRowObj.palne_typ,
+                ovt_it: isDL ? 'ОВТ' : 'ІТ'
+            };
+            activeModalItem = {
+                vehicle: foundVeh,
+                waybill: reviewerRowObj,
+                carryover: {
+                    odo: Number(reviewerRowObj.pokaznyky_odometra_vyizd || 0),
+                    moto: Number(reviewerRowObj.pokaznyky_motohodyn_pochatok || 0),
+                    fuel: Number(reviewerRowObj.palne_na_pochatok || 0),
+                    oil: Number(reviewerRowObj.olyva_na_pochatok || 0),
+                    liquid: Number(reviewerRowObj.ridyna_na_pochatok || 0),
+                    prevDocNum: '-',
+                    lastRank: reviewerRowObj.driver_zvanya || reviewerRowObj.operator_zvanya || '',
+                    lastPib: reviewerRowObj.driver_pib || reviewerRowObj.operator_pib || '',
+                    lastRank2: reviewerRowObj.driver2_zvanya || '',
+                    lastPib2: reviewerRowObj.driver2_pib || '',
+                    lastRoute: reviewerRowObj.route || 'Миколаївська область'
+                },
+                rvRecords: []
+            };
+        } else {
+            activeModalItem = mergedChessboard.find(x => x.id_ovt_it == id_ovt_it);
+        }
+
+        if (!activeModalItem) return;
+
+        activeModalMode = mode;
+        isManualDriverMode = false;
+        isModalReadOnly = (mode === 'view_only') || (mode === 'reviewer_inspect' && (!session.can_edit || activeModalItem.waybill?.status === 'approved'));
+
+        document.getElementById('boxManualFuelForm').classList.add('hidden');
+        document.getElementById('boxTrailerPicker').classList.add('hidden');
+
+        const v = activeModalItem.vehicle;
+        const wb = activeModalItem.waybill;
+        const co = activeModalItem.carryover;
+        const curPeriod = wb ? wb.period : (document.getElementById('selPeriod')?.value || 'I');
+
+        document.getElementById('lblEntityPrefix').innerText = isDL ? 'ОВТ:' : 'ІТ:';
+        const engBox = document.getElementById('boxEngineNumInfo');
+        if (!isDL && v.nomer_dvyhuna) {
+            engBox.classList.remove('hidden');
+            document.getElementById('mdlEngineNum').innerText = v.nomer_dvyhuna;
+        } else {
+            engBox.classList.add('hidden');
+        }
+
+        document.getElementById('boxNewDriver').classList.add('hidden');
+        document.getElementById('lblSec1Title').innerText = isDL ? '1. Реквізити документа, дати та водії' : '1. Реквізити ЛРА, дати та відповідальний';
+        document.getElementById('lblMdlDriver').innerText = isDL ? 'Основний водій *' : `Відповідальний за агрегат (${v.pidrozdil}) *`;
+        document.getElementById('btnToggleNewDriver').innerText = isDL ? '+ Інший водій' : '+ Інший відповідальний';
+
+        const warnPrev = document.getElementById('mdlPrevOpenWarn');
+        if (co.hasUnclosedPrev) {
+            warnPrev.classList.remove('hidden');
+            warnPrev.innerHTML = `⚠️ <b>Увага:</b> Лист за попередній <b>Період ${co.unclosedPeriodName}</b> ще у статусі «Відкритий».`;
+        } else {
+            warnPrev.classList.add('hidden');
+        }
+
+        const pencilNotice = document.getElementById('mdlPencilNotice');
+        if (mode === 'open' && activeModalItem.rvRecords && activeModalItem.rvRecords.length > 0) {
+            const details = activeModalItem.rvRecords.map(r => `РВ №${r.vidomist_num || '-'} від ${r.date}: <b>+${r.quantity} л ${r.item_type}</b>`).join('; ');
+            pencilNotice.classList.remove('hidden');
+            pencilNotice.innerHTML = `⛽ <b>Під цей номер є заправка у відомості («на олівець»):</b> ${details}.`;
+        } else {
+            pencilNotice.classList.add('hidden');
+        }
+
+        document.getElementById('mdlVehName').innerText = `${v.viyskovyi_nomer} — ${v.marka_tekhniky}`;
+        document.getElementById('mdlVehUnit').innerText = `${v.pidrozdil} (${v.bat})`;
+        document.getElementById('mdlVehFuel').innerText = `${v.palne_typ || '-'} (${isDL ? (v.l_100_km || 0) + ' л/100км' : (v.l_100_km ? v.l_100_km + ' л/год' : 'за м/г')})`;
+        document.getElementById('mdlPrevDl').innerText = co.prevDocNum || 'немає';
+
+        const startOdoVal = wb ? Number(wb.pokaznyky_odometra_vyizd ?? co.odo) : co.odo;
+        const startMotoVal = wb ? Number(wb.pokaznyky_motohodyn_pochatok ?? co.moto) : co.moto;
+        const startFuelVal = wb ? Number(wb.palne_na_pochatok ?? co.fuel) : co.fuel;
+        const startOilVal = wb ? Number(wb.olyva_na_pochatok ?? co.oil) : co.oil;
+        const startLiqVal = wb ? Number(wb.ridyna_na_pochatok ?? co.liquid) : co.liquid;
+
+        document.getElementById('boxInfoOdo').classList.toggle('hidden', !isDL);
+        document.getElementById('boxInfoMoto').classList.toggle('hidden', isDL && v.ovt_it !== 'ОВТ/ІТ' && startMotoVal <= 0);
+
+        document.getElementById('mdlInfoOdo').innerText = `${Math.round(startOdoVal)} км`;
+        document.getElementById('mdlInfoMoto').innerText = `${startMotoVal} м/г`;
+        document.getElementById('mdlInfoFuelBal').innerText = `${Math.round(startFuelVal)} л (${v.palne_typ || '-'})`;
+        document.getElementById('mdlInfoOilBal').innerText = `${startOilVal} л`;
+        document.getElementById('mdlInfoLiqBal').innerText = `${startLiqVal} л`;
+
+        const rwBanner = document.getElementById('mdlReworkBanner');
+        if (wb && wb.status === 'rework') {
+            rwBanner.classList.remove('hidden');
+            document.getElementById('mdlReworkText').innerText = wb.review_comment || 'Перевірте правильність показників';
+        } else {
+            rwBanner.classList.add('hidden');
+        }
+
+        populateModalPersonSelect(v.pidrozdil, wb, co, isDL);
+
+        const datesObj = terminalData.periods_dates || {};
+        const { startStr: monthStart, endStr: monthEnd } = resolveMonthBoundsFromKey(wb ? wb.month_key : session.month_key, datesObj);
+        let pStart = '';
+        let pEnd = '';
+
+        if (!isDL) {
+            pStart = monthStart;
+            pEnd = monthEnd;
+        } else {
+            const periodIdx = ROMAN_PERIODS.indexOf(curPeriod) + 1;
+            const totalPeriods = Number(terminalData.periods_count || datesObj.periods_count || 2);
+            pStart = datesObj[`p_${periodIdx}_start`] ? datesObj[`p_${periodIdx}_start`].split('T')[0] : monthStart;
+
+            if (periodIdx < totalPeriods && datesObj[`p_${periodIdx + 1}_start`]) {
+                pEnd = subtractOneDayStr(datesObj[`p_${periodIdx + 1}_start`]);
+            } else {
+                pEnd = monthEnd;
+            }
+        }
+
+        document.getElementById('mdlDateStart').value = (wb && wb.date_start) ? wb.date_start : pStart;
+        document.getElementById('mdlDateEnd').value = (wb && wb.date_end) ? wb.date_end : pEnd;
+
+        const routeBox = document.getElementById('boxMdlRoute');
+        const trailersSection = document.getElementById('boxMdlTrailersSection');
+
+        if (isDL) {
+            routeBox.classList.remove('hidden');
+            trailersSection.classList.remove('hidden');
+
+            const routeSource = (wb && wb.route) ? wb.route : co.lastRoute;
+            selectedRouteRegions = routeSource.split(',').map(s => s.trim()).filter(Boolean);
+            modalTrailers = (wb && Array.isArray(wb.trailers_json)) ? JSON.parse(JSON.stringify(wb.trailers_json)) : [];
+            populateBattalionTrailersDropdown(v.pidrozdil);
+        } else {
+            routeBox.classList.add('hidden');
+            trailersSection.classList.add('hidden');
+            selectedRouteRegions = [];
+            modalTrailers = [];
+        }
+
+        const docInput = document.getElementById('mdlDocNumber');
+        if (wb && (wb.nomer_dl || wb.nomer_lra)) {
+            docInput.value = wb.nomer_dl || wb.nomer_lra;
+        } else {
+            docInput.value = 'Завантаження...';
+            fetchNextDocNumberForModal();
+        }
+
+        const secClose = document.getElementById('sectionClosingFields');
+        const footer = document.getElementById('mdlFooterBtns');
+
+        if (mode === 'open') {
+            setModalInputsReadOnly(false);
+            if (isDL) {
+                renderRouteChips();
+                renderModalAttachedTrailers();
+            }
+            document.getElementById('mdlTitle').innerText = isDL
+                ? `📝 Відкриття Дорожнього листа (Період ${curPeriod})`
+                : `📝 Відкриття Листа роботи агрегата (на місяць)`;
+            secClose.classList.add('hidden');
+            footer.innerHTML = `
+                <button type="button" class="btn btn-outline" onclick="closeWaybillModal()">Скасувати</button>
+                <button type="button" class="btn btn-primary" onclick="saveOpenWaybillFromModal()">📝 Відкрити лист</button>
+            `;
+        } else if (mode === 'reviewer_inspect') {
+            const canEdit = Boolean(session.can_edit) && wb.status !== 'approved';
+            isModalReadOnly = !canEdit;
+            secClose.classList.remove('hidden');
+            setupModalCountersAndFuel(wb, co, isDL);
+            setModalInputsReadOnly(!canEdit);
+            if (isDL) {
+                renderRouteChips();
+                renderModalAttachedTrailers();
+            }
+            renderModalReceipts();
+
+            document.getElementById('mdlTitle').innerText = `${canEdit ? '✏️ Перевірка та редагування' : '👁️ Перегляд картки'} № ${wb.nomer_dl || wb.nomer_lra} (${wb.bat} / ${wb.pidrozdil})`;
+
+            if (wb.status === 'approved') {
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-outline" onclick="closeWaybillModal()">Закрити вікно</button>
+                    <button type="button" class="btn btn-warn" onclick="closeWaybillModal(); unapproveArchivedWaybill(${wb.id})">↩️ Повернути з Архіву в «На перевірці»</button>
+                `;
+            } else {
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-outline" onclick="closeWaybillModal()">Скасувати</button>
+                    <button type="button" class="btn btn-danger" onclick="closeWaybillModal(); reviewWaybillDecision(${wb.id}, 'rework')">↩️ На доопрацювання</button>
+                    ${canEdit ? `<button type="button" class="btn btn-primary" onclick="saveCloseOrEditWaybill('pending_review', false)">💾 Зберегти зміни</button>` : ''}
+                    <button type="button" class="btn btn-accent" onclick="${canEdit ? `saveCloseOrEditWaybill('pending_review', true)` : `closeWaybillModal(); reviewWaybillDecision(${wb.id}, 'approve')`}">✅ ${canEdit ? 'Зберегти та Затвердити' : 'Затвердити лист'}</button>
+                `;
+            }
+        } else if (mode === 'view_only') {
+            isModalReadOnly = true;
+            secClose.classList.remove('hidden');
+            setupModalCountersAndFuel(wb, co, isDL);
+            setModalInputsReadOnly(true);
+            if (isDL) {
+                renderRouteChips();
+                renderModalAttachedTrailers();
+            }
+            renderModalReceipts();
+            document.getElementById('mdlTitle').innerText = `👁️ Затверджений лист № ${wb.nomer_dl || wb.nomer_lra}`;
+            footer.innerHTML = `<button type="button" class="btn btn-outline" onclick="closeWaybillModal()">Закрити</button>`;
+        } else {
+            isModalReadOnly = false;
+            document.getElementById('mdlTitle').innerText = (mode === 'close')
+                ? `🔒 Закриття та розрахунок № ${wb.nomer_dl || wb.nomer_lra}`
+                : `✏️ Редагування листа № ${wb.nomer_dl || wb.nomer_lra}`;
+
+            secClose.classList.remove('hidden');
+            setupModalCountersAndFuel(wb, co, isDL);
+            setModalInputsReadOnly(false);
+
+            if (isUprSubunitUser()) {
+                document.getElementById('mdlDocNumber').readOnly = true;
+                document.getElementById('mdlDateStart').readOnly = true;
+                document.getElementById('mdlDateEnd').readOnly = true;
+                document.getElementById('boxRouteControls').classList.add('hidden');
+                document.getElementById('btnToggleTrailerPicker').classList.add('hidden');
+            }
+
+            if (isDL) {
+                renderRouteChips();
+                renderModalAttachedTrailers();
+            }
+            renderModalReceipts();
+
+            footer.innerHTML = `
+                <button type="button" class="btn btn-outline" onclick="closeWaybillModal()">Скасувати</button>
+                ${wb.status === 'open' ? `<button type="button" class="btn btn-primary" onclick="saveCloseOrEditWaybill('open')">💾 Зберегти чернетку (залишити відкритим)</button>` : ''}
+                <button type="button" class="btn btn-accent" onclick="saveCloseOrEditWaybill('pending_review')">🔒 Зберегти та відправити на перевірку</button>
+            `;
+        }
+
+        document.getElementById('waybillModal').classList.remove('hidden');
+    }
+
+    function closeWaybillModal() {
+        document.getElementById('waybillModal').classList.add('hidden');
+    }
+
+    function populateBattalionTrailersDropdown(currentUnit) {
+        const sel = document.getElementById('selBattalionTrailers');
+        sel.innerHTML = '';
+
+        const allTrailers = terminalData.trailers || [];
+        if (allTrailers.length === 0) {
+            sel.add(new Option('-- У батальйоні не знайдено причепів --', ''));
+            return;
+        }
+
+        const myUnitTrailers = allTrailers.filter(t => t.pidrozdil === currentUnit);
+        const otherUnitTrailers = allTrailers.filter(t => t.pidrozdil !== currentUnit);
+
+        if (myUnitTrailers.length > 0) {
+            const grpMy = document.createElement('optgroup');
+            grpMy.label = `Причепи підрозділу ${currentUnit}`;
+            myUnitTrailers.forEach(t => grpMy.appendChild(new Option(`${t.viyskovyi_nomer} — ${t.marka_tekhniky}`, t.id_ovt_it)));
+            sel.appendChild(grpMy);
+        }
+
+        if (otherUnitTrailers.length > 0) {
+            const grpOther = document.createElement('optgroup');
+            grpOther.label = `Інші причепи батальйону`;
+            otherUnitTrailers.forEach(t => grpOther.appendChild(new Option(`${t.viyskovyi_nomer} — ${t.marka_tekhniky} (${t.pidrozdil})`, t.id_ovt_it)));
+            sel.appendChild(grpOther);
+        }
+    }
+
+    function toggleTrailerPickerBox() {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        document.getElementById('boxTrailerPicker').classList.toggle('hidden');
+    }
+
+    function attachSelectedTrailer() {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        const sel = document.getElementById('selBattalionTrailers');
+        const trId = sel.value;
+        if (!trId) return;
+
+        const found = (terminalData.trailers || []).find(t => t.id_ovt_it == trId);
+        if (!found) return;
+
+        if (modalTrailers.some(t => t.id_ovt_it == found.id_ovt_it || t.viyskovyi_nomer === found.viyskovyi_nomer)) {
+            alert(`Причіп ${found.viyskovyi_nomer} вже прикріплено до цього листа!`);
+            return;
+        }
+
+        const curVehDist = (activeModalMode !== 'open')
+            ? (parseFloat(document.getElementById('mdlDistanceDriven')?.value) || 0)
+            : 0;
+
+        modalTrailers.push({
+            id_ovt_it: found.id_ovt_it,
+            viyskovyi_nomer: found.viyskovyi_nomer,
+            marka_tekhniky: found.marka_tekhniky,
+            pidrozdil: found.pidrozdil,
+            proideno_km: curVehDist
+        });
+
+        document.getElementById('boxTrailerPicker').classList.add('hidden');
+        renderModalAttachedTrailers();
+    }
+
+    function removeAttachedTrailer(idx) {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        modalTrailers.splice(idx, 1);
+        renderModalAttachedTrailers();
+    }
+
+    function updateTrailerKmValue(idx, val) {
+        if (isModalReadOnly) return;
+        if (modalTrailers[idx]) {
+            modalTrailers[idx].proideno_km = Math.max(0, Math.round(parseFloat(val) || 0));
+        }
+    }
+
+    function copyVehicleDistToTrailer(idx) {
+        if (isModalReadOnly) return;
+        const vehDist = Math.max(0, Math.round(parseFloat(document.getElementById('mdlDistanceDriven')?.value) || 0));
+        if (modalTrailers[idx]) {
+            modalTrailers[idx].proideno_km = vehDist;
+            renderModalAttachedTrailers();
+        }
+    }
+
+    function renderModalAttachedTrailers() {
+        const container = document.getElementById('mdlAttachedTrailersList');
+        if (!modalTrailers || modalTrailers.length === 0) {
+            container.innerHTML = '<div style="font-size:0.78rem; color:#94a3b8; margin-top:4px;">Без причепа.</div>';
+            return;
+        }
+
+        const isClosingOrEditing = (activeModalMode !== 'open');
+        const canDetachTrailer = !isModalReadOnly && !isUprSubunitUser();
+
+        container.innerHTML = modalTrailers.map((tr, idx) => `
+            <div class="trailer-item-row">
+                <div>
+                    <b style="color:#e9d5ff;">🔗 ${tr.viyskovyi_nomer}</b> — ${tr.marka_tekhniky}
+                    <small style="color:#94a3b8;">(${tr.pidrozdil || ''})</small>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    ${isClosingOrEditing ? `
+                        <label style="margin:0; font-size:0.76rem; color:#fde047;">Пробіг (км) *:</label>
+                        <input type="number" step="1" min="0" value="${Math.round(tr.proideno_km || 0)}"
+                               ${isModalReadOnly ? 'readonly' : ''}
+                               oninput="updateTrailerKmValue(${idx}, this.value)"
+                               style="width:95px; height:30px; padding:4px 8px; background:#0f172a; border:1px solid #a855f7; border-radius:6px; color:#fff; font-weight:700; text-align:center;">
+                        ${!isModalReadOnly ? `<button type="button" class="btn btn-xs btn-outline" onclick="copyVehicleDistToTrailer(${idx})">= Як у авто</button>` : ''}
+                    ` : `<span style="font-size:0.75rem; color:#a7f3d0;">Прикріплено</span>`}
+                    ${canDetachTrailer ? `<button type="button" class="btn btn-xs btn-danger" onclick="removeAttachedTrailer(${idx})" title="Відкріпити">×</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function populateModalPersonSelect(pidrozdil, wb, co, isDL) {
+        const sel = document.getElementById('mdlDriverSelect');
+        const sel2 = document.getElementById('mdlDriver2Select');
+        sel.innerHTML = '';
+        sel2.innerHTML = '<option value="||">-- Немає напарника --</option>';
+
+        const targetPib = wb ? (wb.driver_pib || wb.operator_pib) : co.lastPib;
+        const targetRank = wb ? (wb.driver_zvanya || wb.operator_zvanya) : co.lastRank;
+
+        const targetPib2 = wb ? wb.driver2_pib : co.lastPib2;
+        const targetRank2 = wb ? wb.driver2_zvanya : co.lastRank2;
+
+        if (isDL) {
+            const myDrivers = (terminalData.drivers || []).filter(d => d.pidrozdil === pidrozdil);
+            const otherDrivers = (terminalData.drivers || []).filter(d => d.pidrozdil !== pidrozdil);
+
+            if (myDrivers.length > 0) {
+                const grpMy = document.createElement('optgroup');
+                const grpMy2 = document.createElement('optgroup');
+                grpMy.label = grpMy2.label = `Водії підрозділу ${pidrozdil}`;
+
+                myDrivers.forEach(d => {
+                    const rankFull = String(d.zvanya || 'солдат').toLowerCase();
+                    const val = `${d.index_posady}|${rankFull}|${d.pib}`;
+                    const opt1 = new Option(`${rankFull} ${d.pib}`, val);
+                    const opt2 = new Option(`${rankFull} ${d.pib}`, val);
+
+                    if (targetPib && d.pib === targetPib) opt1.selected = true;
+                    if (targetPib2 && d.pib === targetPib2) opt2.selected = true;
+
+                    grpMy.appendChild(opt1);
+                    grpMy2.appendChild(opt2);
+                });
+                sel.appendChild(grpMy);
+                sel2.appendChild(grpMy2);
+            }
+
+            if (otherDrivers.length > 0) {
+                const grpOther = document.createElement('optgroup');
+                const grpOther2 = document.createElement('optgroup');
+                grpOther.label = grpOther2.label = 'Інші підрозділи батальйону';
+
+                otherDrivers.forEach(d => {
+                    const rankFull = String(d.zvanya || 'солдат').toLowerCase();
+                    const val = `${d.index_posady}|${rankFull}|${d.pib}`;
+                    const opt1 = new Option(`${rankFull} ${d.pib} (${d.pidrozdil})`, val);
+                    const opt2 = new Option(`${rankFull} ${d.pib} (${d.pidrozdil})`, val);
+
+                    if (targetPib && d.pib === targetPib) opt1.selected = true;
+                    if (targetPib2 && d.pib === targetPib2) opt2.selected = true;
+
+                    grpOther.appendChild(opt1);
+                    grpOther2.appendChild(opt2);
+                });
+                sel.appendChild(grpOther);
+                sel2.appendChild(grpOther2);
+            }
+
+            document.getElementById('boxDriver2').classList.remove('hidden');
+        } else {
+            const opsList = terminalData.lra_operators || [];
+            const myOps = opsList.filter(o => o.pidrozdil === pidrozdil);
+
+            myOps.forEach(o => {
+                const rankFull = String(o.zvanya || 'солдат').toLowerCase();
+                const val = `LRA_OP|${rankFull}|${o.pib}`;
+                const opt = new Option(`${rankFull} ${o.pib}`, val);
+                if (targetPib && o.pib === targetPib) opt.selected = true;
+                sel.appendChild(opt);
+            });
+
+            document.getElementById('boxDriver2').classList.add('hidden');
+        }
+
+        if (targetPib && !Array.from(sel.options).some(o => o.value.endsWith(`|${targetPib}`))) {
+            const rnk = String(targetRank || 'солдат').toLowerCase();
+            const customOpt = new Option(`${rnk} ${targetPib}`, `MANUAL|${rnk}|${targetPib}`);
+            customOpt.selected = true;
+            sel.insertBefore(customOpt, sel.firstChild);
+        }
+
+        if (targetPib2 && isDL && !Array.from(sel2.options).some(o => o.value.endsWith(`|${targetPib2}`))) {
+            const rnk2 = String(targetRank2 || 'солдат').toLowerCase();
+            const customOpt2 = new Option(`${rnk2} ${targetPib2}`, `MANUAL|${rnk2}|${targetPib2}`);
+            customOpt2.selected = true;
+            sel2.appendChild(customOpt2);
+        }
+
+        if (sel.options.length === 0) {
+            sel.add(new Option(isDL ? '-- Водіїв не знайдено (додайте нижче) --' : `-- Відповідальних (${pidrozdil}) ще немає (додайте) --`, '||'));
+            if (!isManualDriverMode && !isReviewer()) toggleManualDriverBox();
+        }
+    }
+
+    function toggleManualDriverBox() {
+        if (isModalReadOnly) return;
+        const isDL = (session.operator_type === 'ДЛ' || session.operator_type === 'СВТОЛ');
+        isManualDriverMode = !isManualDriverMode;
+        const box = document.getElementById('boxNewDriver');
+        const btn = document.getElementById('btnToggleNewDriver');
+        if (isManualDriverMode) {
+            box.classList.remove('hidden');
+            btn.innerText = '✖ Скасувати';
+            document.getElementById('mdlNewDriverPib').focus();
+        } else {
+            box.classList.add('hidden');
+            btn.innerText = isDL ? '+ Інший водій' : '+ Інший відповідальний';
+        }
+    }
+
+    function addSelectedRegionToRoute() {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        const sel = document.getElementById('mdlRouteAdder');
+        const region = sel.value;
+        if (!region) return;
+        if (!selectedRouteRegions.includes(region)) {
+            selectedRouteRegions.push(region);
+            renderRouteChips();
+        }
+        sel.value = '';
+    }
+
+    function removeRegionFromRoute(idx) {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        selectedRouteRegions.splice(idx, 1);
+        renderRouteChips();
+    }
+
+    function clearRouteTags() {
+        if (isModalReadOnly || isUprSubunitUser()) return;
+        selectedRouteRegions = [];
+        renderRouteChips();
+    }
+
+    function renderRouteChips() {
+        const box = document.getElementById('mdlRouteChips');
+        const canModifyRoute = !isModalReadOnly && !isUprSubunitUser();
+        if (selectedRouteRegions.length === 0) {
+            box.innerHTML = '<span style="color:#94a3b8; font-size:0.78rem;">Оберіть хоча б одну область зі списку вище...</span>';
+            return;
+        }
+        box.innerHTML = selectedRouteRegions.map((reg, i) => `
+            <span class="route-chip">${reg} ${canModifyRoute ? `<b onclick="removeRegionFromRoute(${i})" title="Видалити">×</b>` : ''}</span>
+        `).join('');
+    }
+
+    async function fetchNextDocNumberForModal() {
+        try {
+            const resp = await fetch(`${API.getNextNumber}?bat=${encodeURIComponent(session.bat)}&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}`);
+            if (resp.ok) {
+                const res = await resp.json();
+                document.getElementById('mdlDocNumber').value = res.next_number || '1';
+            } else {
+                document.getElementById('mdlDocNumber').value = '1';
+            }
+        } catch (e) {
+            document.getElementById('mdlDocNumber').value = '1';
+        }
+    }
+
+    function setupModalCountersAndFuel(wb, co, isDL) {
+        const box = document.getElementById('boxMdlCounters');
+
+        if (isDL) {
+            box.className = 'grid-3';
+            const startOdo = Math.round(Number(wb.pokaznyky_odometra_vyizd ?? co.odo));
+            const rawEndOdo = Math.round(Number(wb.pokaznyky_odometra_povernennya || 0));
+            const endOdo = (rawEndOdo >= startOdo && rawEndOdo > 0) ? rawEndOdo : startOdo;
+            const diffKm = Math.max(0, endOdo - startOdo);
+
+            box.innerHTML = `
+                <div class="field-group">
+                    <label for="mdlOdoStart">🔒 Одометр виїзду (км)</label>
+                    <input type="number" id="mdlOdoStart" step="1" value="${startOdo}" readonly title="Стартовий одометр захищено від змін">
+                </div>
+                <div class="field-group">
+                    <label for="mdlOdoEnd">Одометр повернення (км) *</label>
+                    <input type="number" id="mdlOdoEnd" step="1" value="${endOdo}" oninput="recalcModalOdometer()">
+                </div>
+                <div class="field-group">
+                    <label>Пройдено за період (км)</label>
+                    <input type="text" id="mdlDistanceDriven" readonly value="${diffKm}" style="color:#38bdf8; font-weight:700;">
+                </div>
+            `;
+        } else {
+            box.className = 'grid-4';
+            const startMoto = Number(wb.pokaznyky_motohodyn_pochatok ?? co.moto);
+            const workedDecimal = Number(wb.vidpratsyovano_motohodyn || 0);
+            const initHours = Math.floor(workedDecimal + 1e-6);
+            const initMins = Math.round((workedDecimal - initHours) * 60);
+            const endMoto = Number((startMoto + workedDecimal).toFixed(2));
+
+            box.innerHTML = `
+                <div class="field-group">
+                    <label for="mdlMotoStart">🔒 Мотогодини на початок</label>
+                    <input type="number" id="mdlMotoStart" value="${startMoto}" readonly title="Показники на початок не редагуються">
+                </div>
+                <div class="field-group">
+                    <label for="mdlMotoWorkedHours" style="color:#38bdf8;">Відпрацьовано годин *</label>
+                    <input type="number" id="mdlMotoWorkedHours" step="1" min="0" value="${initHours}" oninput="recalcModalMotohours()">
+                </div>
+                <div class="field-group">
+                    <label for="mdlMotoWorkedMins" style="color:#38bdf8;">Відпрацьовано хвилин *</label>
+                    <input type="number" id="mdlMotoWorkedMins" step="1" min="0" max="59" value="${initMins}" oninput="recalcModalMotohours()">
+                </div>
+                <div class="field-group">
+                    <label>Мотогодини на кінець</label>
+                    <input type="text" id="mdlMotoEnd" readonly value="${endMoto}" data-worked="${workedDecimal}" style="color:#34d399; font-weight:700;">
+                </div>
+            `;
+        }
+
+        modalReceipts = Array.isArray(wb.receipts_json) ? JSON.parse(JSON.stringify(wb.receipts_json)) : [];
+
+        const startFuelInput = document.getElementById('mdlStartFuel');
+        startFuelInput.value = Math.round(Number(wb.palne_na_pochatok ?? co.fuel));
+        startFuelInput.readOnly = true;
+
+        document.getElementById('mdlConsumedFuel').value = Math.round(Number(wb.vytracheno_palnoho || 0));
+        document.getElementById('mdlConsumedOil').value = Number(wb.vytracheno_olyvy || 0);
+        document.getElementById('mdlConsumedLiquid').value = Number(wb.vytracheno_ridyny || 0);
+
+        renderModalReceipts();
+        recalcModalBalances();
+    }
+
+    function recalcModalOdometer() {
+        const s = parseFloat(document.getElementById('mdlOdoStart')?.value) || 0;
+        const e = parseFloat(document.getElementById('mdlOdoEnd')?.value) || 0;
+        const diff = (e >= s) ? Math.round(e - s) : 0;
+        document.getElementById('mdlDistanceDriven').value = diff;
+    }
+
+    function recalcModalMotohours() {
+        const s = parseFloat(document.getElementById('mdlMotoStart')?.value) || 0;
+        const h = Math.max(0, parseInt(document.getElementById('mdlMotoWorkedHours')?.value, 10) || 0);
+        let m = Math.max(0, parseInt(document.getElementById('mdlMotoWorkedMins')?.value, 10) || 0);
+        if (m > 59) {
+            m = 59;
+            document.getElementById('mdlMotoWorkedMins').value = 59;
+        }
+        const workedDec = Number((h + (m / 60)).toFixed(2));
+        const endEl = document.getElementById('mdlMotoEnd');
+        endEl.value = (s + workedDec).toFixed(2);
+        endEl.dataset.worked = workedDec;
+    }
+
+    function renderModalReceipts() {
+        const container = document.getElementById('mdlReceiptsList');
+        container.innerHTML = '';
+        let totalFuel = 0, totalOil = 0, totalLiq = 0;
+
+        if (modalReceipts.length === 0) {
+            container.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; padding:6px;">Заправок у цьому періоді ще немає.</div>';
+        }
+
+        modalReceipts.forEach((r, idx) => {
+            const q = parseFloat(r.quantity) || 0;
+            if (r.category === 'oil') totalOil += q;
+            else if (r.category === 'liquid') totalLiq += q;
+            else totalFuel += q;
+
+            const isManual = (r.source === 'manual');
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); border:1px solid var(--border); padding:6px 10px; border-radius:6px; margin-bottom:4px; font-size:0.82rem;';
+
+            let tagHtml = '';
+            if (isManual) {
+                const subTag = (r.manual_type === 'other_unit') ? `🏢 в/ч ${r.unit_code || 'А____'}` : `🎫 Талон АЗС`;
+                tagHtml = `<span style="background:rgba(245,158,11,0.18); color:#fde047; border:1px solid #f59e0b; padding:2px 6px; border-radius:4px; font-size:0.74rem; font-weight:700;">🎫 [Ручне: ${subTag}]</span>`;
+            } else {
+                const rvLabel = r.vidomist_num ? `РВ №${r.vidomist_num}` : 'Роздавальна відомість';
+                tagHtml = `<span style="background:rgba(16,185,129,0.16); color:#6ee7b7; border:1px solid #10b981; padding:2px 6px; border-radius:4px; font-size:0.74rem; font-weight:700;">🔒 [${rvLabel}]</span>`;
+            }
+
+            const canDeleteReceipt = isManual && !isModalReadOnly;
+
+            row.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    ${tagHtml}
+                    <span>📅 ${r.date} — <b>${r.item_type || activeModalItem.vehicle.palne_typ}</b></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <b style="color:#38bdf8;">+${r.quantity} л</b>
+                    ${canDeleteReceipt ? `<button type="button" class="btn btn-xs btn-danger" onclick="removeModalReceipt(${idx})" title="Видалити">×</button>` : `<span style="font-size:0.72rem; color:#64748b;">${isManual ? 'талон' : 'з РВ'}</span>`}
+                </div>
+            `;
+            container.appendChild(row);
+        });
+
+        const recEl = document.getElementById('mdlReceivedFuel');
+        recEl.value = Math.round(totalFuel) + ' л';
+        recEl.dataset.val = totalFuel;
+        recEl.dataset.oil = totalOil;
+        recEl.dataset.liq = totalLiq;
+    }
+
+    function removeModalReceipt(idx) {
+        if (isModalReadOnly) return;
+        if (modalReceipts[idx] && modalReceipts[idx].source !== 'manual') {
+            alert('Офіційні заправки з Роздавальних відомостей видаляти заборонено!');
+            return;
+        }
+        modalReceipts.splice(idx, 1);
+        renderModalReceipts();
+        recalcModalBalances();
+    }
+
+    function toggleManualFuelForm() {
+        if (isModalReadOnly) return;
+        const box = document.getElementById('boxManualFuelForm');
+        box.classList.toggle('hidden');
+        if (!box.classList.contains('hidden')) {
+            document.getElementById('dtManualFuelDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('numManualFuelQty').value = '';
+            document.getElementById('selManualSourceType').value = 'talon';
+            onManualSourceTypeChange('talon');
+            document.getElementById('numManualFuelQty').focus();
+        }
+    }
+
+    function onManualSourceTypeChange(val) {
+        const unitBox = document.getElementById('boxManualUnitInput');
+        if (val === 'other_unit') {
+            unitBox.classList.remove('hidden');
+            const inp = document.getElementById('txtManualUnitCode');
+            inp.value = 'А';
+            inp.focus();
+            inp.setSelectionRange(1, 1);
+        } else {
+            unitBox.classList.add('hidden');
+        }
+    }
+
+    function handleManualUnitMask(el) {
+        let digits = el.value.replace(/\D/g, '').slice(0, 4);
+        el.value = 'А' + digits;
+    }
+
+    function confirmAddManualFuel() {
+        if (isModalReadOnly) return;
+        const srcType = document.getElementById('selManualSourceType').value;
+        const unitCode = document.getElementById('txtManualUnitCode').value.trim().toUpperCase();
+        const date = document.getElementById('dtManualFuelDate').value;
+        const qty = parseFloat(document.getElementById('numManualFuelQty').value) || 0;
+
+        if (srcType === 'other_unit' && !/^А\d{4}$/.test(unitCode)) {
+            alert('Вкажіть номер військової частини: А та 4 цифри (напр: А7015)!');
+            document.getElementById('txtManualUnitCode').focus();
+            return;
+        }
+        if (!date || qty <= 0) {
+            alert('Заповніть дату та обсяг літрів!');
+            return;
+        }
+
+        modalReceipts.push({
+            source: 'manual',
+            manual_type: srcType,
+            unit_code: (srcType === 'other_unit') ? unitCode : null,
+            date: date,
+            category: 'fuel',
+            item_type: activeModalItem.vehicle.palne_typ || 'ДП',
+            quantity: Math.round(qty)
+        });
+
+        document.getElementById('boxManualFuelForm').classList.add('hidden');
+        renderModalReceipts();
+        recalcModalBalances();
+    }
+
+    function recalcModalBalances() {
+        const wb = activeModalItem ? activeModalItem.waybill : null;
+        const co = activeModalItem ? activeModalItem.carryover : { fuel: 0, oil: 0, liquid: 0 };
+
+        // Початкові залишки пального, олив та спецрідин беремо суворо з бази даних (захищено від змін)
+        const startFuel = wb ? Math.round(Number(wb.palne_na_pochatok ?? co.fuel)) : Math.round(Number(co.fuel || 0));
+        const elStartFuel = document.getElementById('mdlStartFuel');
+        if (elStartFuel) elStartFuel.value = startFuel;
+
+        const recEl = document.getElementById('mdlReceivedFuel');
+        const recFuel = parseFloat(recEl?.dataset?.val) || 0;
+        const recOil = parseFloat(recEl?.dataset?.oil) || 0;
+        const recLiq = parseFloat(recEl?.dataset?.liq) || 0;
+
+        const consFuel = parseFloat(document.getElementById('mdlConsumedFuel')?.value) || 0;
+        const endFuel = Math.round(startFuel + recFuel - consFuel);
+
+        const elEndFuel = document.getElementById('mdlEndFuel');
+        if (elEndFuel) {
+            elEndFuel.value = endFuel + ' л';
+            elEndFuel.style.color = (endFuel < 0) ? '#f87171' : '#34d399';
+        }
+
+        const startOil = wb ? Number(wb.olyva_na_pochatok ?? co.oil) : Number(co.oil || 0);
+        const consOil = parseFloat(document.getElementById('mdlConsumedOil')?.value) || 0;
+        const endOil = Number((startOil + recOil - consOil).toFixed(1));
+        const elEndOil = document.getElementById('mdlEndOil');
+        if (elEndOil) {
+            elEndOil.value = `${endOil} л`;
+            elEndOil.style.color = (endOil < 0) ? '#f87171' : '#fde047';
+        }
+
+        const startLiq = wb ? Number(wb.ridyna_na_pochatok ?? co.liquid) : Number(co.liquid || 0);
+        const consLiq = parseFloat(document.getElementById('mdlConsumedLiquid')?.value) || 0;
+        const endLiq = Number((startLiq + recLiq - consLiq).toFixed(1));
+        const elEndLiq = document.getElementById('mdlEndLiquid');
+        if (elEndLiq) {
+            elEndLiq.value = `${endLiq} л`;
+            elEndLiq.style.color = (endLiq < 0) ? '#f87171' : '#86efac';
+        }
+    }
+
+    function resolveDriversFromModal() {
+        let drv1 = { index: '', rank: '', pib: '', save_new_driver: false };
+        if (isManualDriverMode) {
+            drv1.rank = document.getElementById('mdlNewDriverRank').value.trim().toLowerCase();
+            drv1.pib = document.getElementById('mdlNewDriverPib').value.trim();
+            drv1.index = 'MANUAL';
+            drv1.save_new_driver = document.getElementById('chkSaveDriverToDb').checked;
+        } else {
+            const parts1 = (document.getElementById('mdlDriverSelect').value || '||').split('|');
+            drv1.index = parts1[0] || '';
+            drv1.rank = (parts1[1] || '').trim().toLowerCase();
+            drv1.pib = parts1[2] || '';
+        }
+
+        const parts2 = (document.getElementById('mdlDriver2Select')?.value || '||').split('|');
+        const drv2 = {
+            index: parts2[0] || '',
+            rank: (parts2[1] || '').trim().toLowerCase(),
+            pib: parts2[2] || ''
+        };
+
+        return { drv1, drv2 };
+    }
+
+    async function saveOpenWaybillFromModal() {
+        if (isUprSubunitUser()) {
+            alert('Підрозділ не має права відкривати нові листи!');
+            return;
+        }
+        const v = activeModalItem.vehicle;
+        const co = activeModalItem.carryover;
+        const isDL = (session.operator_type === 'ДЛ');
+        const docNum = document.getElementById('mdlDocNumber').value.trim();
+        if (!docNum) {
+            alert('Вкажіть номер листа!');
+            return;
+        }
+
+        if (checkDocNumberDuplicate(docNum, v.id_ovt_it, null)) {
+            document.getElementById('mdlDocNumber').focus();
+            return;
+        }
+
+        const { drv1, drv2 } = resolveDriversFromModal();
+        if (!drv1.pib) {
+            alert(isDL ? 'Оберіть водія або додайте нового!' : 'Оберіть або додайте відповідального!');
+            return;
+        }
+
+        if (isDL && selectedRouteRegions.length === 0) {
+            alert('Додайте хоча б одну область у Маршрут руху!');
+            return;
+        }
+
+        const dStart = document.getElementById('mdlDateStart').value;
+        const dEnd = document.getElementById('mdlDateEnd').value;
+
+        const payload = {
+            operator_type: session.operator_type,
+            month_key: session.month_key,
+            period: document.getElementById('selPeriod').value,
+            bat: session.bat,
+            pidrozdil: v.pidrozdil,
+            id_ovt_it: v.id_ovt_it,
+            viyskovyi_nomer: v.viyskovyi_nomer,
+            marka_tekhniky: v.marka_tekhniky,
+            palne_typ: v.palne_typ,
+            doc_number: docNum,
+            driver_index: drv1.index,
+            driver_rank: drv1.rank,
+            driver_pib: drv1.pib,
+            driver2_index: drv2.index,
+            driver2_rank: drv2.rank,
+            driver2_pib: drv2.pib,
+            date_start: dStart,
+            date_end: dEnd,
+            save_new_driver: drv1.save_new_driver,
+            route: isDL ? selectedRouteRegions.join(', ') : null,
+            trailers_json: isDL ? modalTrailers : [],
+            start_odometer: co.odo,
+            start_motohours: co.moto,
+            start_fuel: co.fuel,
+            start_oil: co.oil,
+            start_liquid: co.liquid
+        };
+
+        try {
+            const resp = await fetch(API.openWaybill, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                closeWaybillModal();
+                await refreshAllData();
+            } else {
+                alert('Помилка відкриття листа.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання із сервером.");
+        }
+    }
+
+    async function saveCloseOrEditWaybill(targetStatus, autoApproveAfterSave = false) {
+        const wb = activeModalItem.waybill;
+        const co = activeModalItem.carryover || {};
+        const isDL = (session.operator_type === 'ДЛ' || session.operator_type === 'СВТОЛ');
+
+        const docNum = isUprSubunitUser() ? String(wb.nomer_dl || wb.nomer_lra || '') : document.getElementById('mdlDocNumber').value.trim();
+
+        if (!isReviewer() && !isUprSubunitUser() && checkDocNumberDuplicate(docNum, wb.id_ovt_it, wb.id)) {
+            document.getElementById('mdlDocNumber').focus();
+            return;
+        }
+
+        const { drv1, drv2 } = resolveDriversFromModal();
+
+        let odoStart = 0, odoEnd = 0, dist = 0, motoStart = 0, motoWorked = 0, motoEnd = 0;
+        if (isDL) {
+            // Стартовий одометр незмінний і завжди береться з бази
+            odoStart = Math.round(Number(wb.pokaznyky_odometra_vyizd ?? co.odo ?? 0));
+            odoEnd = parseFloat(document.getElementById('mdlOdoEnd').value) || 0;
+            if (odoEnd < odoStart) {
+                alert('Одометр повернення не може бути меншим за одометр виїзду!');
+                return;
+            }
+            dist = Math.round(odoEnd - odoStart);
+        } else {
+            // Стартові мотогодини незмінні і завжди беруться з бази
+            motoStart = Number(wb.pokaznyky_motohodyn_pochatok ?? co.moto ?? 0);
+            const h = Math.max(0, parseInt(document.getElementById('mdlMotoWorkedHours')?.value, 10) || 0);
+            const m = Math.max(0, parseInt(document.getElementById('mdlMotoWorkedMins')?.value, 10) || 0);
+            motoWorked = Number((h + (m / 60)).toFixed(2));
+            motoEnd = Number((motoStart + motoWorked).toFixed(2));
+        }
+
+        // Початкові залишки пального, олив та спецрідин у баках незмінні і завжди беруться з бази
+        const startFuel = Math.round(Number(wb.palne_na_pochatok ?? co.fuel ?? 0));
+        const startOil = Number(wb.olyva_na_pochatok ?? co.oil ?? 0);
+        const startLiq = Number(wb.ridyna_na_pochatok ?? co.liquid ?? 0);
+
+        const recEl = document.getElementById('mdlReceivedFuel');
+        const recFuel = parseFloat(recEl?.dataset?.val) || 0;
+        const recOil = parseFloat(recEl?.dataset?.oil) || 0;
+        const recLiq = parseFloat(recEl?.dataset?.liq) || 0;
+
+        const consFuel = parseFloat(document.getElementById('mdlConsumedFuel').value) || 0;
+        const consOil = parseFloat(document.getElementById('mdlConsumedOil').value) || 0;
+        const consLiq = parseFloat(document.getElementById('mdlConsumedLiquid').value) || 0;
+
+        if (startFuel + recFuel - consFuel < 0) {
+            alert('Увага: Витрата пального перевищує наявний залишок у баку та отримання!');
+            return;
+        }
+        if (Number((startOil + recOil - consOil).toFixed(1)) < 0) {
+            alert('Увага: Витрата оливи перевищує наявний залишок у баку та отримання!');
+            return;
+        }
+        if (Number((startLiq + recLiq - consLiq).toFixed(1)) < 0) {
+            alert('Увага: Витрата спецрідин перевищує наявний залишок та отримання!');
+            return;
+        }
+
+        const dStart = isUprSubunitUser() ? wb.date_start : document.getElementById('mdlDateStart').value;
+        const dEnd = isUprSubunitUser() ? wb.date_end : document.getElementById('mdlDateEnd').value;
+        const finalRoute = isDL ? (isUprSubunitUser() ? wb.route : selectedRouteRegions.join(', ')) : null;
+
+        const payload = {
+            work_id: wb.id,
+            operator_type: isReviewer() ? (session.operator_type === 'СВТОЛ' ? 'ДЛ' : 'ЛРА') : session.operator_type,
+            target_status: targetStatus,
+            doc_number: docNum,
+            driver_rank: drv1.rank,
+            driver_pib: drv1.pib,
+            driver2_rank: drv2.rank,
+            driver2_pib: drv2.pib,
+            date_start: dStart,
+            date_end: dEnd,
+            route: finalRoute,
+            trailers_json: isDL ? modalTrailers : [],
+            odo_start: odoStart,
+            odo_end: odoEnd,
+            distance: dist,
+            moto_start: motoStart,
+            moto_worked: motoWorked,
+            moto_end: motoEnd,
+            start_fuel: startFuel,
+            consumed_fuel: consFuel,
+            consumed_oil: consOil,
+            consumed_liquid: consLiq,
+            receipts_json: modalReceipts
+        };
+
+        try {
+            const resp = await fetch(API.closeWaybill, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                if (autoApproveAfterSave && isReviewer()) {
+                    await fetch(API.reviewAction, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            work_id: wb.id,
+                            table_type: (session.operator_type === 'СВТОЛ') ? 'ДЛ' : 'ЛРА',
+                            action: 'approve',
+                            reviewer: session.operator_type,
+                            comment: null
+                        })
+                    });
+                }
+                closeWaybillModal();
+                if (isReviewer()) {
+                    await loadReviewerQueue();
+                } else {
+                    await refreshAllData();
+                }
+            } else {
+                alert('Помилка оновлення листа.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання із сервером.");
+        }
+    }
+
+    // =========================================================================
+    // СЛУЖБА ПЕРЕВІРКИ (СВТОЛ / ЕТС): ЧЕРГА ПЕРЕВІРКИ, АРХІВ, ФІЛЬТРИ ТА СОРТУВАННЯ ПІДРОЗДІЛІВ
+    // =========================================================================
+    function renderReviewerTableHeaders(isSvtol, targetHeadId, isArchive) {
+        const thead = document.getElementById(targetHeadId);
+        const sortFn = isArchive ? 'sortReviewerArchiveBy' : 'sortReviewerQueueBy';
+        const docCol = isSvtol ? 'nomer_dl' : 'nomer_lra';
+        thead.innerHTML = `
+            ${isArchive ? `<th onclick="${sortFn}('month_key')">Місяць ⇅</th>` : ''}
+            <th onclick="${sortFn}('bat')">Бат. ⇅</th>
+            <th onclick="${sortFn}('pidrozdil')">Підр. ⇅</th>
+            <th onclick="${sortFn}('period')">Період ⇅</th>
+            <th onclick="${sortFn}('${docCol}')">№ листа ⇅</th>
+            <th onclick="${sortFn}('viyskovyi_nomer')">Військ. № ⇅</th>
+            <th onclick="${sortFn}('marka_tekhniky')">${isSvtol ? 'Назва ОВТ / Причіп' : 'Назва ІТ'} ⇅</th>
+            ${isSvtol ? '<th>Водії</th><th>Маршрут</th><th>Виїзд</th><th>Поверн.</th><th>Пройд.</th>' : '<th>Відповідальний</th><th>Поч. м/г</th><th>Кін. м/г</th><th>Відпрац.</th>'}
+            <th>Пальне (Поч / Отр / Витр / Зал)</th>
+            <th style="color:#fde047;">Олива (Отр / Витр / Зал)</th>
+            <th style="color:#86efac;">Рідини (Отр / Витр / Зал)</th>
+            <th>${isArchive ? 'Дії з архівом' : 'Рішення служби'}</th>
+        `;
+    }
+
+    function sortReviewerQueueBy(field) {
+        if (revQueueSortField === field) revQueueSortAsc = !revQueueSortAsc;
+        else { revQueueSortField = field; revQueueSortAsc = true; }
+        renderReviewerQueueRows();
+    }
+
+    function sortReviewerArchiveBy(field) {
+        if (revArchiveSortField === field) revArchiveSortAsc = !revArchiveSortAsc;
+        else { revArchiveSortField = field; revArchiveSortAsc = true; }
+        renderReviewerArchiveRows();
+    }
+
+    function sortReviewerFleetBy(field) {
+        if (revFleetSortField === field) revFleetSortAsc = !revFleetSortAsc;
+        else { revFleetSortField = field; revFleetSortAsc = true; }
+        renderFleetTable();
+    }
+
+    function populateSubunitFilterFromList(selectElId, batVal, rowsList) {
+        const sel = document.getElementById(selectElId);
+        if (!sel) return;
+        const prev = sel.value || 'ALL';
+        const units = [...new Set(
+            (rowsList || [])
+                .filter(r => batVal === 'ALL' || r.bat === batVal)
+                .map(r => r.pidrozdil)
+                .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, 'uk', { numeric: true }));
+
+        sel.innerHTML = `<option value="ALL">Усі підрозділи (${units.length})</option>`;
+        units.forEach(u => sel.add(new Option(u, u)));
+        if (units.includes(prev)) sel.value = prev;
+    }
+
+    function onReviewerQueueBatFilterChange() {
+        const bat = document.getElementById('selReviewerBatFilter').value;
+        populateSubunitFilterFromList('selReviewerPidrozdilFilter', bat, reviewerQueueCache);
+        renderReviewerQueueRows();
+    }
+
+    function onReviewerArchiveBatFilterChange() {
+        const bat = document.getElementById('selArchiveBat').value;
+        populateSubunitFilterFromList('selArchivePidrozdil', bat, reviewerArchiveCache);
+        renderReviewerArchiveRows();
+    }
+
+    function onReviewerFleetBatFilterChange() {
+        const bat = document.getElementById('selFleetBat').value;
+        populateSubunitFilterFromList('selFleetPidrozdil', bat, fleetCache);
+        renderFleetTable();
+    }
+
+    function openReviewerRowModal(workId, isFromArchive) {
+        const list = isFromArchive ? reviewerArchiveCache : reviewerQueueCache;
+        const found = list.find(r => r.id == workId);
+        if (!found) return;
+        openWaybillModal(found.id_ovt_it, 'reviewer_inspect', found);
+    }
+
+    async function loadReviewerQueue() {
+        const tbody = document.getElementById('tblReviewerBody');
+        tbody.innerHTML = '<tr><td colspan="17" style="padding:16px;">Завантаження черги перевірки...</td></tr>';
+
+        try {
+            const resp = await fetch(`${API.getReviewQueue}?role=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}&status=pending_review`);
+            if (resp.ok) {
+                const res = await resp.json();
+                reviewerQueueCache = res.rows || [];
+                populateSubunitFilterFromList('selReviewerPidrozdilFilter', document.getElementById('selReviewerBatFilter').value, reviewerQueueCache);
+                renderReviewerQueueRows();
+            }
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="17" style="padding:16px; color:#ef4444;">Помилка завантаження черги.</td></tr>';
+        }
+    }
+
+    function renderReviewerQueueRows() {
+        const tbody = document.getElementById('tblReviewerBody');
+        const batFilter = document.getElementById('selReviewerBatFilter').value;
+        const pidrFilter = document.getElementById('selReviewerPidrozdilFilter')?.value || 'ALL';
+        const perFilter = document.getElementById('selReviewerPeriodFilter').value;
+        const q = (document.getElementById('txtRevSearch').value || '').trim().toLowerCase();
+        const isSvtol = (session.operator_type === 'СВТОЛ');
+
+        let filtered = reviewerQueueCache.filter(r => {
+            if (batFilter !== 'ALL' && r.bat !== batFilter) return false;
+            if (pidrFilter !== 'ALL' && r.pidrozdil !== pidrFilter) return false;
+            if (perFilter !== 'ALL' && r.period !== perFilter) return false;
+            if (q) {
+                const trStr = (r.trailers_json || []).map(t => `${t.viyskovyi_nomer} ${t.marka_tekhniky}`).join(' ');
+                const hay = `${r.bat} ${r.pidrozdil} ${r.viyskovyi_nomer} ${r.marka_tekhniky} ${r.nomer_dl || r.nomer_lra} ${r.driver_pib || r.operator_pib || ''} ${r.driver2_pib || ''} ${r.route || ''} ${trStr}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let vA = String(a[revQueueSortField] ?? ''), vB = String(b[revQueueSortField] ?? '');
+            return revQueueSortAsc ? vA.localeCompare(vB, 'uk', { numeric: true }) : vB.localeCompare(vA, 'uk', { numeric: true });
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="17" style="padding:18px; color:#10b981; font-weight:600;">🎉 Усі листи за фільтром перевірено! Черга порожня.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => buildReviewerRowHtml(r, isSvtol, false)).join('');
+    }
+
+    function initArchiveMonthSelector() {
+        const sel = document.getElementById('selArchiveMonth');
+        sel.innerHTML = '<option value="ALL">Усі місяці (весь архів)</option>';
+        const months = (terminalData.all_months && terminalData.all_months.length > 0)
+            ? terminalData.all_months
+            : [{ month_key: session.month_key, month_name: session.month_key }];
+
+        months.forEach(m => {
+            const opt = new Option(`${m.month_key} (${m.month_name || ''})`, m.month_key);
+            if (m.month_key === session.month_key) opt.selected = true;
+            sel.add(opt);
+        });
+    }
+
+    async function loadReviewerArchive() {
+        const tbody = document.getElementById('tblArchiveBody');
+        tbody.innerHTML = '<tr><td colspan="18" style="padding:16px;">Завантаження архіву затверджених листів...</td></tr>';
+        const targetMonth = document.getElementById('selArchiveMonth').value || session.month_key;
+
+        try {
+            const resp = await fetch(`${API.getReviewQueue}?role=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(targetMonth)}&status=approved`);
+            if (resp.ok) {
+                const res = await resp.json();
+                reviewerArchiveCache = res.rows || [];
+                populateSubunitFilterFromList('selArchivePidrozdil', document.getElementById('selArchiveBat').value, reviewerArchiveCache);
+                renderReviewerArchiveRows();
+            }
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="18" style="padding:16px; color:#ef4444;">Помилка завантаження архіву.</td></tr>';
+        }
+    }
+
+    function renderReviewerArchiveRows() {
+        const tbody = document.getElementById('tblArchiveBody');
+        const batFilter = document.getElementById('selArchiveBat').value;
+        const pidrFilter = document.getElementById('selArchivePidrozdil')?.value || 'ALL';
+        const perFilter = document.getElementById('selArchivePeriod').value;
+        const q = (document.getElementById('txtArchiveSearch').value || '').trim().toLowerCase();
+        const isSvtol = (session.operator_type === 'СВТОЛ');
+
+        let filtered = reviewerArchiveCache.filter(r => {
+            if (batFilter !== 'ALL' && r.bat !== batFilter) return false;
+            if (pidrFilter !== 'ALL' && r.pidrozdil !== pidrFilter) return false;
+            if (perFilter !== 'ALL' && r.period !== perFilter) return false;
+            if (q) {
+                const trStr = (r.trailers_json || []).map(t => `${t.viyskovyi_nomer} ${t.marka_tekhniky}`).join(' ');
+                const hay = `${r.month_key} ${r.bat} ${r.pidrozdil} ${r.viyskovyi_nomer} ${r.marka_tekhniky} ${r.nomer_dl || r.nomer_lra} ${r.driver_pib || r.operator_pib || ''} ${r.driver2_pib || ''} ${r.route || ''} ${trStr}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let vA = String(a[revArchiveSortField] ?? ''), vB = String(b[revArchiveSortField] ?? '');
+            return revArchiveSortAsc ? vA.localeCompare(vB, 'uk', { numeric: true }) : vB.localeCompare(vA, 'uk', { numeric: true });
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="18" style="padding:18px; color:#94a3b8;">Затверджених листів у архіві за обраним фільтром не знайдено.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => buildReviewerRowHtml(r, isSvtol, true)).join('');
+    }
+
+    function buildReviewerRowHtml(r, isSvtol, isArchive) {
+        const recs = Array.isArray(r.receipts_json) ? r.receipts_json : [];
+        const hasManual = recs.some(x => x.source === 'manual');
+        const fuelRecBadge = hasManual
+            ? `<span title="Є ручні заправки" style="color:#fde047;">🎫 +${Math.round(r.nadano_palnoho || 0)}</span>`
+            : `<span title="Підтверджено у РВ" style="color:#38bdf8;">+${Math.round(r.nadano_palnoho || 0)}</span>`;
+
+        const trBadges = (isSvtol && Array.isArray(r.trailers_json) && r.trailers_json.length > 0)
+            ? r.trailers_json.map(t => `<span class="trailer-tag-inline" title="Причіп: ${t.marka_tekhniky || ''}">🔗 ${t.viyskovyi_nomer} (${Math.round(t.proideno_km || 0)} км)</span>`).join('')
+            : '';
+
+        const driversDisp = [
+            r.driver_pib ? `${r.driver_zvanya || ''} ${r.driver_pib}`.trim() : '',
+            r.driver2_pib ? `${r.driver2_zvanya || ''} ${r.driver2_pib}`.trim() : ''
+        ].filter(Boolean).join('<br>➕ ');
+
+        const oilRec = Number(r.nadano_olyvy || 0);
+        const oilCons = Number(r.vytracheno_olyvy || 0);
+        const oilEnd = Number(r.olyva_na_kinets || 0);
+        const hasOilMove = (oilRec > 0 || oilCons > 0 || oilEnd > 0);
+
+        const liqRec = Number(r.nadano_ridyny || 0);
+        const liqCons = Number(r.vytracheno_ridyny || 0);
+        const liqEnd = Number(r.ridyna_na_kinets || 0);
+        const hasLiqMove = (liqRec > 0 || liqCons > 0 || liqEnd > 0);
+
+        const actionsCell = isArchive
+            ? `
+                <button class="btn btn-xs btn-outline" onclick="event.stopPropagation(); openReviewerRowModal(${r.id}, true)">👁️ Картка</button>
+                <button class="btn btn-xs btn-warn" onclick="event.stopPropagation(); unapproveArchivedWaybill(${r.id})" title="Повернути у статус На перевірці">↩️ У перевірку</button>
+                <button class="btn btn-xs btn-outline" title="Паспорт-історія" onclick="event.stopPropagation(); jumpToVehicleHistory(${r.id_ovt_it})">📖</button>
+            `
+            : `
+                <button class="btn btn-xs btn-outline" onclick="event.stopPropagation(); openReviewerRowModal(${r.id}, false)" title="Відкрити/редагувати картку">${session.can_edit ? '✏️' : '👁️'}</button>
+                <button class="btn btn-xs btn-accent" onclick="event.stopPropagation(); reviewWaybillDecision(${r.id}, 'approve')">✅</button>
+                <button class="btn btn-xs btn-danger" onclick="event.stopPropagation(); reviewWaybillDecision(${r.id}, 'rework')">↩️</button>
+                <button class="btn btn-xs btn-outline" title="Паспорт-історія" onclick="event.stopPropagation(); jumpToVehicleHistory(${r.id_ovt_it})">📖</button>
+            `;
+
+        return `
+            <tr ondblclick="openReviewerRowModal(${r.id}, ${isArchive})" title="Подвійний клік — відкрити повну картку листа">
+                ${isArchive ? `<td><b>${r.month_key}</b></td>` : ''}
+                <td><b>${r.bat}</b></td>
+                <td><b>${r.pidrozdil}</b></td>
+                <td>${r.period}</td>
+                <td><b>${r.nomer_dl || r.nomer_lra}</b></td>
+                <td><b style="color:#38bdf8;">${r.viyskovyi_nomer}</b></td>
+                <td style="text-align:left; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${r.marka_tekhniky || '-'}${trBadges}</td>
+                ${isSvtol ? `
+                    <td style="text-align:left;">${driversDisp || '-'}</td>
+                    <td style="text-align:left; max-width:130px; overflow:hidden; text-overflow:ellipsis;" title="${r.route || ''}">${r.route || '-'}</td>
+                    <td>${Math.round(r.pokaznyky_odometra_vyizd || 0)}</td>
+                    <td>${Math.round(r.pokaznyky_odometra_povernennya || 0)}</td>
+                    <td><b style="color:#38bdf8;">${Math.round(r.proideno_km || 0)} км</b></td>
+                ` : `
+                    <td style="text-align:left;">${r.operator_zvanya || ''} ${r.operator_pib || '-'}</td>
+                    <td>${r.pokaznyky_motohodyn_pochatok || 0}</td>
+                    <td>${r.pokaznyky_motohodyn_kinets || 0}</td>
+                    <td><b style="color:#38bdf8;">${formatMotoHoursReadable(r.vidpratsyovano_motohodyn)}</b></td>
+                `}
+                <td>
+                    <b>${Math.round(r.palne_na_pochatok || 0)}</b> /
+                    ${fuelRecBadge} /
+                    <span style="color:#fbbf24;">-${Math.round(r.vytracheno_palnoho || 0)}</span> /
+                    <b style="color:#34d399;">${Math.round(r.palne_na_kinets || 0)} л</b>
+                </td>
+                <td class="${hasOilMove ? 'oil-cell-active' : ''}">
+                    +${oilRec} / -${oilCons} / <b>${oilEnd} л</b>
+                </td>
+                <td class="${hasLiqMove ? 'liq-cell-active' : ''}">
+                    +${liqRec} / -${liqCons} / <b>${liqEnd} л</b>
+                </td>
+                <td>${actionsCell}</td>
+            </tr>
+        `;
+    }
+
+    async function reviewWaybillDecision(workId, action) {
+        let comment = null;
+        if (action === 'rework') {
+            comment = prompt('Вкажіть зауваження для батальйону (що потрібно виправити):');
+            if (!comment || !comment.trim()) return;
+        } else {
+            if (!confirm('Підтвердити правильність листа? Дані буде перенесено у pmm_reports.')) return;
+        }
+
+        try {
+            const resp = await fetch(API.reviewAction, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    work_id: workId,
+                    table_type: (session.operator_type === 'СВТОЛ') ? 'ДЛ' : 'ЛРА',
+                    action: action,
+                    reviewer: session.operator_type,
+                    comment: comment
+                })
+            });
+
+            if (resp.ok) {
+                await loadReviewerQueue();
+            } else {
+                alert('Помилка збереження рішення.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання.");
+        }
+    }
+
+    async function unapproveArchivedWaybill(workId) {
+        if (!confirm('Повернути цей затверджений лист із фінансового звіту назад у статус «На перевірці»?')) return;
+
+        try {
+            const resp = await fetch(API.reviewAction, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    work_id: workId,
+                    table_type: (session.operator_type === 'СВТОЛ') ? 'ДЛ' : 'ЛРА',
+                    action: 'unapprove',
+                    reviewer: session.operator_type,
+                    comment: 'Повернуто з архіву на перевірку'
+                })
+            });
+
+            if (resp.ok) {
+                await Promise.all([loadReviewerArchive(), loadReviewerQueue()]);
+                alert('Лист успішно повернуто у вкладку «Черга верифікації»!');
+            } else {
+                alert('Помилка повернення з архіву.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання.");
+        }
+    }
+
+    // =========================================================================
+    // НАСКРІЗНА ВКЛАДКА «ІСТОРІЯ ОВТ / ІТ (ПАСПОРТ МАШИНИ ПО ВСІХ МІСЯЦЯХ)»
+    // =========================================================================
+    function initHistoryFilters() {
+        const selBat = document.getElementById('selHistBat');
+        const selPidr = document.getElementById('selHistPidrozdil');
+
+        if (!isReviewer()) {
+            selBat.value = session.bat;
+            selBat.disabled = true;
+        } else {
+            selBat.disabled = false;
+        }
+
+        const sourceVehicles = isReviewer() ? fleetCache : [...(terminalData.vehicles || []), ...(terminalData.trailers || [])];
+        if (isUprSubunitUser()) {
+            selPidr.innerHTML = `<option value="${session.pidrozdil}" selected>${session.pidrozdil} (Упр)</option>`;
+            selPidr.disabled = true;
+        } else {
+            const units = [...new Set(sourceVehicles.map(v => v.pidrozdil).filter(Boolean))].sort();
+            selPidr.innerHTML = '<option value="ALL">Усі підрозділи</option>';
+            units.forEach(u => selPidr.add(new Option(u, u)));
+            selPidr.disabled = false;
+        }
+
+        populateHistoryVehicleSelect();
+    }
+
+    function populateHistoryVehicleSelect(selectedId = null) {
+        const selBat = document.getElementById('selHistBat').value;
+        const selPidr = document.getElementById('selHistPidrozdil').value;
+        const q = (document.getElementById('txtHistQuickFilter').value || '').trim().toLowerCase();
+        const selVeh = document.getElementById('selHistVehicle');
+
+        const rawList = isReviewer() ? fleetCache : [...(terminalData.vehicles || []), ...(terminalData.trailers || [])];
+        const filtered = rawList.filter(v => {
+            if (selBat !== 'ALL' && v.bat !== selBat) return false;
+            if (selPidr !== 'ALL' && v.pidrozdil !== selPidr) return false;
+            if (q) {
+                const hay = `${v.viyskovyi_nomer} ${v.marka_tekhniky} ${v.pidrozdil} ${v.nomer_dvyhuna || ''}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        selVeh.innerHTML = '<option value="" selected disabled>-- Оберіть машину / агрегат (' + filtered.length + ' од.) --</option>';
+        filtered.forEach(v => {
+            const opt = new Option(`${v.viyskovyi_nomer} — ${v.marka_tekhniky} [${v.pidrozdil} / ${v.bat}]`, v.id_ovt_it);
+            if (selectedId && v.id_ovt_it == selectedId) opt.selected = true;
+            selVeh.add(opt);
+        });
+    }
+
+    function jumpToVehicleHistory(id_ovt_it) {
+        if (isReviewer()) {
+            switchReviewerTab('history');
+        } else {
+            switchOperatorTab('history');
+        }
+        populateHistoryVehicleSelect(id_ovt_it);
+        loadVehicleFullHistory(id_ovt_it);
+    }
+
+    async function loadVehicleFullHistory(id_ovt_it) {
+        const box = document.getElementById('historyContentBox');
+        if (!id_ovt_it) return;
+
+        box.innerHTML = '<div class="toolbar-card" style="justify-content:center; padding:24px;">⏳ Завантаження повної історії по місяцях та періодах...</div>';
+
+        try {
+            const resp = await fetch(`${API.initTerminal}?bat=ALL&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}&history_id=${encodeURIComponent(id_ovt_it)}`);
+            if (!resp.ok) throw new Error('HTTP Error');
+            const res = await resp.json();
+            const d = res.data || res;
+
+            const monthsRows = d.vehicle_months || [];
+            const dlRows = d.waybills_dl || [];
+            const lraRows = d.waybills_lra || [];
+            const repRows = d.reports_history || [];
+
+            const headVeh = monthsRows[0] || {};
+            const isIT = (headVeh.ovt_it === 'ІТ');
+
+            let html = `
+                <div class="veh-summary-panel" style="margin-bottom:14px;">
+                    <div class="veh-summary-row">
+                        <div>Паспорт одиниці: <b style="color:#38bdf8; font-size:1rem;">${headVeh.viyskovyi_nomer || '-'} — ${headVeh.marka_tekhniky || '-'}</b></div>
+                        <div>Категорія: <b>${headVeh.ovt_it || '-'}</b></div>
+                        <div>Поточний підрозділ: <b style="color:#fde047;">${headVeh.pidrozdil || '-'} (${headVeh.bat || '-'})</b></div>
+                        <div>Пальне / Норма: <b>${headVeh.palne_typ || '-'} (${headVeh.l_100_km || 0})</b></div>
+                        ${headVeh.nomer_dvyhuna ? `<div>№ двигуна/генератора: <b style="color:#e9d5ff;">${headVeh.nomer_dvyhuna}</b></div>` : ''}
+                    </div>
+                </div>
+
+                <div class="section-divider"><span>📅 1. Історія обліку в картках техніки по місяцях (таблиця ovt_it)</span></div>
+                <div class="table-wrap" style="margin-bottom:16px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Місяць</th>
+                                <th>Батальйон</th>
+                                <th>Підрозділ</th>
+                                <th>Статус</th>
+                                <th>Норма</th>
+                                <th>Останній № листа</th>
+                                <th>${isIT ? 'Мотогодини (м/г)' : 'Одометр (км)'}</th>
+                                <th>Залишок пального (л)</th>
+                                <th>Залишок оливи (л)</th>
+                                <th>Залишок спецрідин (л)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${monthsRows.length === 0 ? '<tr><td colspan="10">Немає даних</td></tr>' : monthsRows.map(m => `
+                                <tr>
+                                    <td><b style="color:#38bdf8;">${m.month_key}</b></td>
+                                    <td><b>${m.bat}</b></td>
+                                    <td>${m.pidrozdil}</td>
+                                    <td>${m.status_ovt_it}</td>
+                                    <td>${m.l_100_km || 0}</td>
+                                    <td><b>${m.ostanniy_nomer_dl || '-'}</b></td>
+                                    <td><b>${isIT ? (m.pokaznyk_lichylnyka_motohodyn || 0) + ' м/г' : Math.round(m.ostanni_pokaznyky_odometra || 0) + ' км'}</b></td>
+                                    <td style="color:#34d399; font-weight:700;">${Math.round(m.zalyshok_v_batsi_total || 0)} л</td>
+                                    <td style="color:#fde047;">${m.olyva_zalyshok_total || 0} л</td>
+                                    <td style="color:#86efac;">${m.ridyna_zalyshok_total || 0} л</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const workSheets = isIT ? lraRows : dlRows;
+            html += `
+                <div class="section-divider"><span>📋 2. Усі листи (${isIT ? 'ЛРА' : 'ДЛ'}) по періодах та місяцях</span></div>
+                <div class="table-wrap" style="margin-bottom:16px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Місяць</th>
+                                <th>Період</th>
+                                <th>Статус</th>
+                                <th>№ листа</th>
+                                <th>Дати</th>
+                                <th>${isIT ? 'Відповідальний' : 'Водії / Маршрут'}</th>
+                                <th>${isIT ? 'Поч. / Кін. / Відпр. (м/г)' : 'Виїзд / Поверн. / Пробіг (км)'}</th>
+                                <th>Пальне (Поч / Отр / Витр / Зал)</th>
+                                <th>Олива (Отр / Витр / Зал)</th>
+                                <th>Рідини (Отр / Витр / Зал)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${workSheets.length === 0 ? '<tr><td colspan="10" style="padding:12px; color:#94a3b8;">Записів у електронних журналах ще немає.</td></tr>' : workSheets.map(w => `
+                                <tr>
+                                    <td><b>${w.month_key}</b></td>
+                                    <td><b>${w.period}</b></td>
+                                    <td><span class="status-badge status-${w.status === 'pending_review' ? 'pending' : w.status}">${w.status}</span></td>
+                                    <td><b style="color:#38bdf8;">${w.nomer_dl || w.nomer_lra}</b></td>
+                                    <td>${w.date_start || '-'} .. ${w.date_end || '-'}</td>
+                                    <td style="text-align:left;">${isIT ? `${w.operator_zvanya || ''} ${w.operator_pib || ''}` : `${w.driver_zvanya || ''} ${w.driver_pib || ''} ${w.route ? '(' + w.route + ')' : ''}`}</td>
+                                    <td><b>${isIT ? `${w.pokaznyky_motohodyn_pochatok} → ${w.pokaznyky_motohodyn_kinets} (+${w.vidpratsyovano_motohodyn})` : `${Math.round(w.pokaznyky_odometra_vyizd)} → ${Math.round(w.pokaznyky_odometra_povernennya)} (+${Math.round(w.proideno_km)} км)`}</b></td>
+                                    <td>${Math.round(w.palne_na_pochatok)} / +${Math.round(w.nadano_palnoho)} / -${Math.round(w.vytracheno_palnoho)} / <b style="color:#34d399;">${Math.round(w.palne_na_kinets)} л</b></td>
+                                    <td>+${w.nadano_olyvy || 0} / -${w.vytracheno_olyvy || 0} / <b style="color:#fde047;">${w.olyva_na_kinets || 0} л</b></td>
+                                    <td>+${w.nadano_ridyny || 0} / -${w.vytracheno_ridyny || 0} / <b style="color:#86efac;">${w.ridyna_na_kinets || 0} л</b></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section-divider"><span>✅ 3. Проведені фінансові звіти по періодах (таблиця pmm_reports)</span></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Місяць</th>
+                                <th>Період</th>
+                                <th>№ листа</th>
+                                <th>${isIT ? 'Поч. / Кін. / Відпр. (м/г)' : 'Виїзд / Поверн. / Пробіг (км)'}</th>
+                                <th>Пальне (Поч / Отр / Витр / Зал)</th>
+                                <th>Олива (Поч / Отр / Витр / Зал)</th>
+                                <th>Рідини (Поч / Отр / Витр / Зал)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${repRows.length === 0 ? '<tr><td colspan="7" style="padding:12px; color:#94a3b8;">Проведених фінансових звітів не знайдено.</td></tr>' : repRows.map(rp => `
+                                <tr>
+                                    <td><b>${rp.month_key}</b></td>
+                                    <td><b>${rp.period}</b></td>
+                                    <td><b style="color:#38bdf8;">${rp.nomer_dl}</b></td>
+                                    <td><b>${isIT ? `${rp.pokaznyky_motohodyn_pochatok} → ${rp.pokaznyky_motohodyn_kinets} (+${rp.vidpratsyovano_motohodyn})` : `${Math.round(rp.pokaznyky_odometra_vyizd)} → ${Math.round(rp.pokaznyky_odometra_povernennya)} (+${Math.round(rp.proideno_km)} км)`}</b></td>
+                                    <td>${Math.round(rp.palne_na_pochatok)} / +${Math.round(rp.nadano_palnoho)} / -${Math.round(rp.vytracheno_palnoho)} / <b style="color:#34d399;">${Math.round(rp.palne_na_kinets)} л</b></td>
+                                    <td>${rp.olyva_na_pochatok || 0} / +${rp.nadano_olyvy || 0} / -${rp.vytracheno_olyvy || 0} / <b style="color:#fde047;">${rp.olyva_na_kinets || 0} л</b></td>
+                                    <td>${rp.ridyna_na_pochatok || 0} / +${rp.nadano_ridyny || 0} / -${rp.vytracheno_ridyny || 0} / <b style="color:#86efac;">${rp.ridyna_na_kinets || 0} л</b></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            box.innerHTML = html;
+        } catch (e) {
+            box.innerHTML = '<div class="toolbar-card" style="color:#ef4444;">Помилка завантаження історії техніки.</div>';
+        }
+    }
+
+    // РЕЄСТР ТЕХНІКИ: РОЗДІЛЕННЯ ОВТ ТА ІТ + СОРТУВАННЯ І ФІЛЬТР ЗА ПІДРОЗДІЛОМ
+    async function loadReviewerFleet() {
+        try {
+            const resp = await fetch(`${API.initTerminal}?bat=ALL&type=${encodeURIComponent(session.operator_type)}&month_key=${encodeURIComponent(session.month_key)}`);
+            if (resp.ok) {
+                const res = await resp.json();
+                const d = res.data || res;
+                terminalData = d;
+                const isSvtol = (session.operator_type === 'СВТОЛ');
+                allSubunitsCache = d.subunits || [];
+                populateRanksAndRoutesDropdowns();
+
+                const allV = [...(d.vehicles || []), ...(d.trailers || [])];
+                const map = new Map();
+                allV.forEach(item => {
+                    if (isSvtol && item.ovt_it === 'ІТ') return;
+                    if (!isSvtol && item.ovt_it !== 'ІТ') return;
+                    map.set(item.id_ovt_it, item);
+                });
+                fleetCache = Array.from(map.values());
+
+                populateSubunitFilterFromList('selFleetPidrozdil', document.getElementById('selFleetBat').value, fleetCache);
+                renderFleetTable();
+            }
+        } catch (e) {
+            console.error('Помилка завантаження реєстру техніки:', e);
+        }
+    }
+
+    function renderFleetTable() {
+        const isSvtol = (session.operator_type === 'СВТОЛ');
+        const thead = document.getElementById('tblFleetHead');
+        const tbody = document.getElementById('tblFleetBody');
+
+        thead.innerHTML = `
+            <th>№</th>
+            <th onclick="sortReviewerFleetBy('bat')">Батальйон ⇅</th>
+            <th onclick="sortReviewerFleetBy('pidrozdil')">Підрозділ ⇅</th>
+            <th onclick="sortReviewerFleetBy('ovt_it')">Тип ⇅</th>
+            <th onclick="sortReviewerFleetBy('viyskovyi_nomer')">${isSvtol ? 'Військ. номер' : 'Інв. номер ІТ'} ⇅</th>
+            <th onclick="sortReviewerFleetBy('marka_tekhniky')">Назва / Марка ⇅</th>
+            ${!isSvtol ? '<th onclick="sortReviewerFleetBy(\'nomer_dvyhuna\')">№ генератора / двигуна ⇅</th>' : ''}
+            <th>Пальне</th>
+            <th>${isSvtol ? 'Норма (л/100км)' : 'Норма (л/год)'}</th>
+            <th>${isSvtol ? 'Початковий пробіг (км)' : 'Початкові мотогодини (м/г)'}</th>
+            <th>Залишок ПММ (захищено)</th>
+            <th>Дії</th>
+        `;
+
+        const batF = document.getElementById('selFleetBat').value;
+        const pidrF = document.getElementById('selFleetPidrozdil')?.value || 'ALL';
+        const q = (document.getElementById('txtFleetSearch').value || '').trim().toLowerCase();
+
+        let filtered = fleetCache.filter(v => {
+            if (batF !== 'ALL' && v.bat !== batF) return false;
+            if (pidrF !== 'ALL' && v.pidrozdil !== pidrF) return false;
+            if (q) {
+                const hay = `${v.bat} ${v.pidrozdil} ${v.viyskovyi_nomer} ${v.marka_tekhniky} ${v.nomer_dvyhuna || ''}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => {
+            let vA = String(a[revFleetSortField] ?? ''), vB = String(b[revFleetSortField] ?? '');
+            return revFleetSortAsc ? vA.localeCompare(vB, 'uk', { numeric: true }) : vB.localeCompare(vA, 'uk', { numeric: true });
+        });
+
+        const colSpanCount = isSvtol ? 11 : 12;
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colSpanCount}" style="padding:16px; color:#94a3b8;">Одиниць техніки за фільтром не знайдено.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((v, i) => `
+            <tr ondblclick="openFleetModal(${v.id_ovt_it})" title="Подвійний клік — редагувати">
+                <td>${i + 1}</td>
+                <td><b>${v.bat}</b></td>
+                <td><b>${v.pidrozdil || '-'}</b></td>
+                <td>${v.ovt_it}</td>
+                <td><b style="color:#38bdf8;">${v.viyskovyi_nomer}</b></td>
+                <td style="text-align:left;">${v.marka_tekhniky || '-'}</td>
+                ${!isSvtol ? `<td><b style="color:#e9d5ff;">${v.nomer_dvyhuna || '-'}</b></td>` : ''}
+                <td>${v.palne_typ || '-'}</td>
+                <td>${v.ovt_it === 'Причіп' ? '-' : (v.l_100_km || 0)}</td>
+                <td><b>${isSvtol ? Math.round(v.ostanni_pokaznyky_odometra || 0) + ' км' : (v.pokaznyk_lichylnyka_motohodyn || 0) + ' м/г'}</b></td>
+                <td style="color:#64748b;">🔒 П:${Math.round(v.zalyshok_v_batsi_total || 0)}л | О:${v.olyva_zalyshok_total || 0}л | Р:${v.ridyna_zalyshok_total || 0}л</td>
+                <td>
+                    <button class="btn btn-xs btn-outline" onclick="event.stopPropagation(); openFleetModal(${v.id_ovt_it})">✏️ Ред.</button>
+                    <button class="btn btn-xs btn-outline" title="Паспорт-історія" onclick="event.stopPropagation(); jumpToVehicleHistory(${v.id_ovt_it})">📖</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function populateFleetSubunitsDropdown(bat, selectedPidrozdil) {
+        const sel = document.getElementById('flPidrozdil');
+        sel.innerHTML = '';
+
+        const fromAuth = allSubunitsCache.filter(s => s.bat === bat).map(s => ({ code: s.pidrozdil, name: s.pidrozdil_name }));
+        const fromFleet = fleetCache.filter(v => v.bat === bat && v.pidrozdil).map(v => ({ code: v.pidrozdil, name: v.pidrozdil }));
+
+        const map = new Map();
+        fromAuth.forEach(item => map.set(item.code, item.name));
+        fromFleet.forEach(item => { if (!map.has(item.code)) map.set(item.code, item.name); });
+
+        if (selectedPidrozdil && !map.has(selectedPidrozdil)) {
+            map.set(selectedPidrozdil, selectedPidrozdil);
+        }
+
+        Array.from(map.entries()).forEach(([code, name]) => {
+            const label = (name && name !== code) ? `${code} — ${name}` : code;
+            const opt = new Option(label, code);
+            if (selectedPidrozdil && code === selectedPidrozdil) opt.selected = true;
+            sel.add(opt);
+        });
+    }
+
+    function computeNextSuggestedNumber(bat, ovtItType) {
+        if (ovtItType !== 'ІТ') return '';
+        const itemsInBat = fleetCache.filter(v => v.bat === bat && v.ovt_it === 'ІТ');
+        let maxNum = 0;
+        itemsInBat.forEach(v => {
+            const m = String(v.viyskovyi_nomer || '').match(/(\d+)/);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                if (n > maxNum) maxNum = n;
+            }
+        });
+        if (maxNum === 0) {
+            const prefix = parseInt(bat, 10) || 1;
+            maxNum = prefix * 1000;
+        }
+        return `${maxNum + 1}ІТ`;
+    }
+
+    function onFleetBatChange() {
+        const bat = document.getElementById('flBat').value;
+        populateFleetSubunitsDropdown(bat, '');
+        onFleetTypeChange();
+    }
+
+    function onFleetTypeChange() {
+        const isSvtol = (session.operator_type === 'СВТОЛ');
+        const type = document.getElementById('flOvtIt').value;
+        const bat = document.getElementById('flBat').value;
+        const isTrailer = (type === 'Причіп');
+        const isIT = (type === 'ІТ');
+
+        document.getElementById('boxFlEngineNum').classList.toggle('hidden', !isIT);
+        document.getElementById('boxFlMoto').classList.toggle('hidden', !isIT);
+        document.getElementById('boxFlOdo').classList.toggle('hidden', isIT);
+        document.getElementById('boxFlFuelType').classList.toggle('hidden', isTrailer);
+        document.getElementById('boxFlNorma').classList.toggle('hidden', isTrailer);
+
+        document.getElementById('lblFlVehNum').innerText = isIT ? 'Інвентарний номер ІТ *' : 'Військовий номер *';
+        document.getElementById('lblFlMarka').innerText = isIT ? 'Назва / Марка генератора (ІТ) *' : (isTrailer ? 'Марка причепа / напівпричепа *' : 'Марка автомобіля (ОВТ) *');
+        document.getElementById('lblFlNorma').innerText = isIT ? 'Норма (л/год)' : 'Норма (л/100км)';
+        document.getElementById('flVehNumber').placeholder = isIT ? 'Напр: 4050ІТ' : (isTrailer ? 'Напр: 1785Х1' : 'Напр: 2414Р1');
+        document.getElementById('flMarka').placeholder = isIT ? 'Напр: Daewoo GDA 3500' : (isTrailer ? 'Напр: ПЦ-6,7-8925' : 'Напр: Mitsubishi L200');
+
+        if (!editingFleetItem && isIT && !isSvtol) {
+            suggestedFleetNum = computeNextSuggestedNumber(bat, 'ІТ');
+            document.getElementById('lblSuggestedNum').innerText = `💡 Вільний №: ${suggestedFleetNum} (підставити)`;
+            document.getElementById('flVehNumber').value = suggestedFleetNum;
+        } else {
+            suggestedFleetNum = '';
+            document.getElementById('lblSuggestedNum').innerText = '';
+            if (!editingFleetItem) {
+                document.getElementById('flVehNumber').value = '';
+            }
+        }
+    }
+
+    function applySuggestedNumber() {
+        if (suggestedFleetNum) {
+            document.getElementById('flVehNumber').value = suggestedFleetNum;
+        }
+    }
+
+    function openFleetModal(id_ovt_it) {
+        const isSvtol = (session.operator_type === 'СВТОЛ');
+        editingFleetItem = id_ovt_it ? fleetCache.find(v => v.id_ovt_it == id_ovt_it) : null;
+
+        const selType = document.getElementById('flOvtIt');
+        selType.innerHTML = '';
+        if (isSvtol) {
+            selType.add(new Option('🚗 ОВТ (Автомобіль)', 'ОВТ'));
+            selType.add(new Option('🔗 Причіп / Напівпричіп', 'Причіп'));
+        } else {
+            selType.add(new Option('⚡ ІТ (Генератор / агрегат)', 'ІТ'));
+        }
+
+        const elBat = document.getElementById('flBat');
+        const elPidr = document.getElementById('flPidrozdil');
+
+        if (editingFleetItem) {
+            document.getElementById('mdlFleetTitle').innerText = `✏️ Редагування: ${editingFleetItem.viyskovyi_nomer} (${editingFleetItem.marka_tekhniky})`;
+            elBat.value = editingFleetItem.bat || '1ЛБ';
+            populateFleetSubunitsDropdown(elBat.value, editingFleetItem.pidrozdil || '');
+
+            selType.value = (isSvtol && editingFleetItem.ovt_it === 'Причіп') ? 'Причіп' : (isSvtol ? 'ОВТ' : 'ІТ');
+
+            elBat.disabled = true;
+            elPidr.disabled = true;
+            selType.disabled = true;
+
+            onFleetTypeChange();
+
+            document.getElementById('flVehNumber').value = editingFleetItem.viyskovyi_nomer || '';
+            document.getElementById('flMarka').value = editingFleetItem.marka_tekhniky || '';
+            document.getElementById('flEngineNum').value = editingFleetItem.nomer_dvyhuna || '';
+            document.getElementById('flFuelType').value = editingFleetItem.palne_typ || 'ДП';
+            document.getElementById('flNorma').value = editingFleetItem.l_100_km || 0;
+            document.getElementById('flInitOdo').value = Math.round(editingFleetItem.ostanni_pokaznyky_odometra || 0);
+            document.getElementById('flInitMoto').value = editingFleetItem.pokaznyk_lichylnyka_motohodyn || 0;
+        } else {
+            document.getElementById('mdlFleetTitle').innerText = `➕ Додавання нової одиниці (${isSvtol ? 'ОВТ / Причіп' : 'ІТ — Генератор'})`;
+            const defaultBat = document.getElementById('selFleetBat').value !== 'ALL' ? document.getElementById('selFleetBat').value : '1ЛБ';
+            elBat.value = defaultBat;
+            populateFleetSubunitsDropdown(defaultBat, '');
+
+            selType.value = isSvtol ? 'ОВТ' : 'ІТ';
+
+            elBat.disabled = false;
+            elPidr.disabled = false;
+            selType.disabled = !isSvtol;
+
+            document.getElementById('flMarka').value = '';
+            document.getElementById('flEngineNum').value = '';
+            document.getElementById('flFuelType').value = isSvtol ? 'ДП' : 'АБ';
+            document.getElementById('flNorma').value = 0;
+            document.getElementById('flInitOdo').value = 0;
+            document.getElementById('flInitMoto').value = 0;
+
+            onFleetTypeChange();
+        }
+
+        document.getElementById('fleetModal').classList.remove('hidden');
+    }
+
+    function closeFleetModal() {
+        document.getElementById('fleetModal').classList.add('hidden');
+    }
+
+    async function saveFleetVehicle() {
+        const bat = document.getElementById('flBat').value;
+        const pidrozdil = document.getElementById('flPidrozdil').value.trim();
+        const ovt_it = document.getElementById('flOvtIt').value;
+        const viyskovyi_nomer = document.getElementById('flVehNumber').value.trim();
+        const marka_tekhniky = document.getElementById('flMarka').value.trim();
+        const nomer_dvyhuna = document.getElementById('flEngineNum').value.trim();
+        const palne_typ = document.getElementById('flFuelType').value;
+        const l_100_km = parseFloat(document.getElementById('flNorma').value) || 0;
+        const init_odo = parseFloat(document.getElementById('flInitOdo').value) || 0;
+        const init_moto = parseFloat(document.getElementById('flInitMoto').value) || 0;
+
+        if (!pidrozdil || !viyskovyi_nomer || !marka_tekhniky) {
+            alert('Заповніть Підрозділ, Військовий номер та Назву/Марку техніки!');
+            return;
+        }
+
+        try {
+            const resp = await fetch(API.saveVehicle, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_ovt_it: editingFleetItem ? editingFleetItem.id_ovt_it : null,
+                    month_key: session.month_key,
+                    bat: bat,
+                    pidrozdil: pidrozdil,
+                    ovt_it: ovt_it,
+                    viyskovyi_nomer: viyskovyi_nomer,
+                    marka_tekhniky: marka_tekhniky,
+                    nomer_dvyhuna: nomer_dvyhuna,
+                    palne_typ: palne_typ,
+                    l_100_km: l_100_km,
+                    ostanni_pokaznyky_odometra: init_odo,
+                    pokaznyk_lichylnyka_motohodyn: init_moto
+                })
+            });
+
+            if (resp.ok) {
+                closeFleetModal();
+                await loadReviewerFleet();
+                alert(editingFleetItem ? 'Дані техніки оновлено!' : `Нову одиницю техніки (${viyskovyi_nomer}) збережено!`);
+            } else {
+                alert('Помилка збереження техніки на сервері.');
+            }
+        } catch (e) {
+            alert("Помилка з'єднання із сервером.");
+        }
+    }
+
+    initApp();
+</script>
+</body>
+</html>

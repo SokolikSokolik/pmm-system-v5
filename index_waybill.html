@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід — Облік ДЛ та ЛРА</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --input-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+        }
+        body { 
+            background: var(--bg-gradient); 
+            color: var(--text-main);
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+        .card-auth { 
+            width: 100%; 
+            max-width: 480px; 
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border); 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px 32px 36px 32px !important;
+        }
+        .btn-hub-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s;
+            margin-bottom: 18px;
+        }
+        .btn-hub-back:hover {
+            color: #ffffff;
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.35);
+        }
+        .logo-block { text-align: center; margin-bottom: 24px; }
+        .logo-icon {
+            width: 58px; height: 58px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 14px;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+            font-size: 26px;
+            user-select: none;
+        }
+        .logo-block h1 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .logo-block p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+        .form-label { color: var(--text-muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+        .form-select, .form-control {
+            background-color: var(--input-bg) !important;
+            border: 1px solid var(--input-border) !important;
+            color: var(--text-main) !important;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+            outline: none;
+        }
+        .form-select:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-primary {
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 8px;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card card-auth">
+    <div>
+        <a href="index.html" class="btn-hub-back">⬅ До порталу систем (Головне меню)</a>
+    </div>
+
+    <div class="logo-block">
+        <div class="logo-icon">📋</div>
+        <h1>Облік ДЛ та ЛРА</h1>
+        <p id="statusText">Авторизація відповідального / перевіряючого</p>
+    </div>
+
+    <form id="waybillAuthForm">
+        <div class="mb-3">
+            <label for="operatorTypeSelect" class="form-label">Напрямок / Служба</label>
+            <select class="form-select" id="operatorTypeSelect" required onchange="handleRoleChange(this.value)">
+                <option value="ДЛ" selected>🚗 Дорожні листи (ОВТ / колісна техніка)</option>
+                <option value="ЛРА">📋 Листи роботи агрегатів (ІТ / генератори)</option>
+                <option value="СВТОЛ">🛠️ СВТОЛ (Перевірка Дорожніх листів ОВТ)</option>
+                <option value="ЕТС">⚡ ЕТС (Перевірка Листів роботи агрегатів ІТ)</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="batSelect" class="form-label">Батальйон</label>
+            <select class="form-select" id="batSelect" required disabled onchange="handleBatChange(this.value)">
+                <option value="" selected disabled>Завантаження структури...</option>
+            </select>
+        </div>
+
+        <div class="mb-3 d-none" id="uprSubunitContainer">
+            <label for="uprSubunitSelect" class="form-label" style="color:#38bdf8;">Підрозділ Управління</label>
+            <select class="form-select" id="uprSubunitSelect"></select>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-7">
+                <label for="monthSelect" class="form-label">Звітний місяць</label>
+                <select class="form-select" id="monthSelect" required disabled>
+                    <option value="" selected disabled>Завантаження...</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <label for="yearSelect" class="form-label">Рік</label>
+                <select class="form-select" id="yearSelect" required disabled>
+                    <option value="" selected disabled>...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="operatorPassword" class="form-label">Пароль доступу</label>
+            <input type="password" class="form-control" id="operatorPassword" required placeholder="Введіть пароль...">
+        </div>
+
+        <div id="errorDiv" class="alert alert-danger d-none mb-4" role="alert"></div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary w-100" disabled>
+            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
+            <span id="btnText">Увійти до терміналу обліку</span>
+        </button>
+    </form>
+</div>
+
+<script>
+    const N8N_URL_INIT_AUTH  = 'https://n8n.pmm-system.com/webhook/v4/get-waybill-auth-init';
+    const N8N_URL_CHECK_AUTH = 'https://n8n.pmm-system.com/webhook/v4/check-waybill-auth';
+    const N8N_URL_LOG_ENTER  = 'https://n8n.pmm-system.com/webhook/v4/log-waybill-enter';
+
+    const batSelect          = document.getElementById('batSelect');
+    const uprSubunitContainer= document.getElementById('uprSubunitContainer');
+    const uprSubunitSelect   = document.getElementById('uprSubunitSelect');
+    const operatorTypeSelect = document.getElementById('operatorTypeSelect');
+    const monthSelect        = document.getElementById('monthSelect');
+    const yearSelect         = document.getElementById('yearSelect');
+    const operatorPassword   = document.getElementById('operatorPassword');
+    const errorDiv           = document.getElementById('errorDiv');
+    const submitBtn          = document.getElementById('submitBtn');
+    const btnText            = document.getElementById('btnText');
+    const btnSpinner         = document.getElementById('btnSpinner');
+
+    let availableBats = [];
+    let allMonthKeys  = [];
+    let uprSubunits   = [];
+
+    const DEFAULT_UPR_SUBUNITS = [
+        { pidrozdil: 'АБ', pidrozdil_name: 'Артилерійська батарея' },
+        { pidrozdil: 'ЗБ', pidrozdil_name: 'Зенітна батарея' },
+        { pidrozdil: 'РР', pidrozdil_name: 'Розвідувальна рота' },
+        { pidrozdil: 'РЗ', pidrozdil_name: "Рота зв'язку" },
+        { pidrozdil: 'РРЕБ', pidrozdil_name: 'Рота радіоелектронної боротьби' },
+        { pidrozdil: 'ІР', pidrozdil_name: 'Інженерна рота' },
+        { pidrozdil: 'РМЗ', pidrozdil_name: 'Рота матеріального забезпечення' },
+        { pidrozdil: 'РемР', pidrozdil_name: 'Ремонтна рота' },
+        { pidrozdil: 'МР', pidrozdil_name: 'Медична рота' },
+        { pidrozdil: 'КВ', pidrozdil_name: 'Комендантський взвод' },
+        { pidrozdil: 'ВЗНП', pidrozdil_name: 'Відділення забезпечення навчального процесу' },
+        { pidrozdil: 'ВОтРБпК', pidrozdil_name: 'Взвод обслуг. та рем. БпАК' },
+        { pidrozdil: 'ГПТЗР', pidrozdil_name: 'Група протидії тех. засобам розвідки' },
+        { pidrozdil: 'ГКЗІ', pidrozdil_name: 'Група криптографічного захисту інформації' },
+        { pidrozdil: 'ВС', pidrozdil_name: 'Відділення снайперів' },
+        { pidrozdil: '331р', pidrozdil_name: '331 окрема рота' }
+    ];
+
+    function handleRoleChange(role) {
+        if (role === 'СВТОЛ' || role === 'ЕТС') {
+            batSelect.innerHTML = '<option value="ALL" selected>Всі батальйони (Служба бригади)</option>';
+            batSelect.disabled = true;
+            uprSubunitContainer.classList.add('d-none');
+        } else {
+            batSelect.disabled = false;
+            renderBattalionOptions();
+            handleBatChange(batSelect.value);
+        }
+    }
+
+    function handleBatChange(bat) {
+        const role = operatorTypeSelect.value;
+        if (bat === 'Упр' && (role === 'ДЛ' || role === 'ЛРА')) {
+            renderUprSubunitsOptions();
+            uprSubunitContainer.classList.remove('d-none');
+        } else {
+            uprSubunitContainer.classList.add('d-none');
+        }
+    }
+
+    function renderUprSubunitsOptions() {
+        uprSubunitSelect.innerHTML = '<option value="ALL" selected>🏢 Управління (Виписка листів — всі підрозділи)</option>';
+        const list = (uprSubunits && uprSubunits.length > 0) ? uprSubunits : DEFAULT_UPR_SUBUNITS;
+        list.forEach(u => {
+            const label = (u.pidrozdil_name && u.pidrozdil_name !== u.pidrozdil)
+                ? `${u.pidrozdil} (Упр) — ${u.pidrozdil_name}`
+                : `${u.pidrozdil} (Упр)`;
+            uprSubunitSelect.add(new Option(label, u.pidrozdil));
+        });
+    }
+
+    function renderBattalionOptions() {
+        batSelect.innerHTML = '<option value="" selected disabled>-- Оберіть батальйон --</option>';
+        availableBats.forEach(b => {
+            if (b !== 'ALL') {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.textContent = b;
+                batSelect.appendChild(opt);
+            }
+        });
+    }
+
+    function getDeviceAndBrowser() {
+        const ua = navigator.userAgent;
+        let device = "PC", browser = "Browser";
+        if (/iphone|ipad|ipod/i.test(ua)) device = "iOS";
+        else if (/android/i.test(ua)) device = "Android";
+        else if (/windows/i.test(ua)) device = "Windows";
+        else if (/macintosh/i.test(ua)) device = "Mac";
+        else if (/linux/i.test(ua)) device = "Linux";
+
+        if (/chrome|crios/i.test(ua)) browser = "Chrome";
+        else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+        else if (/safari/i.test(ua)) browser = "Safari";
+        else if (/edg/i.test(ua)) browser = "Edge";
+        return { device, browser };
+    }
+
+    fetch(N8N_URL_INIT_AUTH)
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP помилка: ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            let res = Array.isArray(data) ? data[0] : data;
+            if (res.json) res = res.json;
+
+            availableBats = res.bats || ['1ЛБ', '2ЛБ', '3ЛБ', '4ЛБ', '5ЛБ', '1БПС', '2БПС', 'Упр'];
+            allMonthKeys = res.month_keys || [];
+            uprSubunits = res.upr_subunits || DEFAULT_UPR_SUBUNITS;
+
+            renderBattalionOptions();
+            batSelect.disabled = false;
+
+            if (allMonthKeys.length > 0) {
+                initYearAndMonthSelect(allMonthKeys);
+            }
+            submitBtn.disabled = false;
+        })
+        .catch(err => {
+            console.error(err);
+            showError("🔴 Помилка зв'язку з базою: не вдалося завантажити довідники.");
+        });
+
+    function initYearAndMonthSelect(periods) {
+        const uniqueYears = [...new Set(periods.map(m => m.month_key.split('_')[1]).filter(Boolean))].sort().reverse();
+
+        yearSelect.innerHTML = '';
+        uniqueYears.forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        });
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const activePeriod = periods.find(p => p.start_date && p.end_date && todayStr >= p.start_date && todayStr <= p.end_date);
+
+        let defaultYear = uniqueYears[0];
+        let defaultMonthNum = '';
+
+        if (activePeriod) {
+            const parts = activePeriod.month_key.split('_');
+            defaultMonthNum = parts[0];
+            defaultYear = parts[1];
+        } else if (periods.length > 0) {
+            const parts = periods[0].month_key.split('_');
+            defaultMonthNum = parts[0];
+            defaultYear = parts[1];
+        }
+
+        yearSelect.value = defaultYear;
+        yearSelect.disabled = false;
+
+        updateMonthsForYear(defaultYear, defaultMonthNum);
+
+        yearSelect.addEventListener('change', function() {
+            updateMonthsForYear(this.value, null);
+        });
+    }
+
+    function updateMonthsForYear(selectedYear, targetMonthNum) {
+        monthSelect.innerHTML = '';
+        const monthsForYear = allMonthKeys
+            .filter(m => m.month_key.split('_')[1] === selectedYear)
+            .sort((a, b) => parseInt(a.month_key.split('_')[0]) - parseInt(b.month_key.split('_')[0]));
+
+        monthsForYear.forEach(m => {
+            const num = m.month_key.split('_')[0];
+            const opt = document.createElement('option');
+            opt.value = num;
+            const capitalizedName = m.month_name ? m.month_name.charAt(0).toUpperCase() + m.month_name.slice(1) : '';
+            opt.textContent = `${capitalizedName} (${num})`;
+
+            if (targetMonthNum && num === targetMonthNum) {
+                opt.selected = true;
+            }
+            monthSelect.appendChild(opt);
+        });
+
+        monthSelect.disabled = false;
+    }
+
+    function showError(message) {
+        errorDiv.innerText = message;
+        errorDiv.classList.remove('d-none');
+        submitBtn.disabled = false;
+        btnText.innerText = 'Увійти до терміналу обліку';
+        btnSpinner.classList.add('d-none');
+    }
+
+    document.getElementById('waybillAuthForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const operatorType = operatorTypeSelect.value;
+        const bat          = (operatorType === 'СВТОЛ' || operatorType === 'ЕТС') ? 'ALL' : batSelect.value;
+        const pidrozdil    = (bat === 'Упр' && !uprSubunitContainer.classList.contains('d-none')) ? uprSubunitSelect.value : 'ALL';
+        const month        = monthSelect.value;
+        const year         = yearSelect.value;
+        const monthKey     = `${month}_${year}`;
+        const pass         = operatorPassword.value.trim();
+
+        if (!bat) {
+            showError('Оберіть батальйон!');
+            return;
+        }
+
+        errorDiv.classList.add('d-none');
+        submitBtn.disabled = true;
+        btnText.innerText = 'Перевірка...';
+        btnSpinner.classList.remove('d-none');
+
+        const info = getDeviceAndBrowser();
+        const logCategory = (bat === 'Упр' && pidrozdil !== 'ALL') ? `${pidrozdil} (Упр)` : bat;
+
+        try {
+            const resAuth = await fetch(N8N_URL_CHECK_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bat: bat,
+                    pidrozdil: pidrozdil,
+                    operator_type: operatorType,
+                    month_key: monthKey,
+                    password: pass
+                })
+            });
+
+            let data = await resAuth.json();
+            let res = Array.isArray(data) ? data[0] : data;
+            if (res.json) res = res.json;
+
+            if (res && res.success === true) {
+                btnText.innerText = 'Успішно! Перехід...';
+
+                const canEditFlag = (res.can_edit !== undefined) ? Boolean(res.can_edit) : true;
+
+                sessionStorage.setItem('pmm_waybill_session', JSON.stringify({
+                    bat: bat,
+                    pidrozdil: pidrozdil,
+                    operator_type: operatorType,
+                    month_key: monthKey,
+                    can_edit: canEditFlag,
+                    pib: res.pib || '',
+                    military_rank: res.military_rank || ''
+                }));
+
+                try {
+                    await fetch(N8N_URL_LOG_ENTER, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            category: logCategory,
+                            sub_unit: operatorType,
+                            month_key: monthKey,
+                            status: `Користувач ${operatorType} (${logCategory}): Успішно`,
+                            device: info.device,
+                            browser: info.browser
+                        })
+                    });
+                } catch (logErr) {}
+
+                window.location.href = `index_PMM_waybill.html?bat=${encodeURIComponent(bat)}&pidrozdil=${encodeURIComponent(pidrozdil)}&type=${encodeURIComponent(operatorType)}&month_key=${encodeURIComponent(monthKey)}&can_edit=${canEditFlag ? '1' : '0'}`;
+            } else {
+                try {
+                    await fetch(N8N_URL_LOG_ENTER, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            category: logCategory,
+                            sub_unit: operatorType,
+                            month_key: monthKey,
+                            status: `Користувач ${operatorType} (${logCategory}): Невірний пароль`,
+                            device: info.device,
+                            browser: info.browser
+                        })
+                    });
+                } catch (logErr) {}
+
+                showError(res && res.message ? res.message : '❌ Невірний пароль доступу!');
+            }
+        } catch (err) {
+            console.error(err);
+            showError("❌ Помилка з'єднання із сервером перевірки.");
+        }
+    });
+</script>
+</body>
+</html>

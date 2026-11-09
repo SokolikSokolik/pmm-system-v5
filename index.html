@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ІЛОНА — Єдиний портал обліку ПММ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b1320 0%, #0f172a 50%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+        }
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            padding: 24px 16px;
+        }
+        .hub-container {
+            width: 100%;
+            max-width: 980px;
+        }
+        .hub-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .hub-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent-blue);
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .hub-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+            margin-bottom: 8px;
+        }
+        .hub-header p {
+            color: var(--text-muted);
+            font-size: 0.98rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 20px;
+        }
+        .module-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 28px 24px;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            transition: height 0.25s ease;
+        }
+        .card-waybill::before { background: var(--accent-blue); }
+        .card-refueler::before { background: var(--accent-green); }
+        .card-spmm::before { background: var(--accent-amber); }
+
+        .module-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+            color: #ffffff;
+        }
+        .icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 18px;
+        }
+        .card-waybill .icon-box {
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: var(--accent-blue);
+        }
+        .card-refueler .icon-box {
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--accent-green);
+        }
+        .card-spmm .icon-box {
+            background: rgba(245, 158, 11, 0.14);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--accent-amber);
+        }
+        .module-role {
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .module-title {
+            font-size: 1.22rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .module-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 22px;
+        }
+        .module-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+        .m-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+        }
+        .module-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .card-waybill .module-action { color: var(--accent-blue); }
+        .card-refueler .module-action { color: var(--accent-green); }
+        .card-spmm .module-action { color: var(--accent-amber); }
+
+        .hub-footer {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hub-container">
+    <div class="hub-header">
+        <div class="hub-badge">🛡️ ІНТЕГРОВАНА СИСТЕМА • V 5.0</div>
+        <h1>Єдиний портал обліку ПММ</h1>
+        <p>Оберіть потрібний робочий контур для авторизації та внесення облікових даних</p>
+    </div>
+
+    <div class="modules-grid">
+        <!-- 1. Термінал ДЛ та ЛРА -->
+        <a href="index_waybill.html" class="module-card card-waybill">
+            <div>
+                <div class="icon-box">📋</div>
+                <div class="module-role">Батальйони • Управління • СВТОЛ • ЕТС</div>
+                <div class="module-title">Облік ДЛ та ЛРА</div>
+                <div class="module-desc">
+                    Виписка, закриття та верифікація дорожніх листів колісної техніки (ОВТ) і робочих листів агрегатів/генераторів (ІТ).
+                </div>
+                <div class="module-tags">
+                    <span class="m-tag">🚗 Дорожні листи</span>
+                    <span class="m-tag">⚡ Робочі листи ІТ</span>
+                    <span class="m-tag">🛠️ Верифікація СВТОЛ / ЕТС</span>
+                </div>
+            </div>
+            <div class="module-action">
+                <span>Перейти до авторизації</span>
+                <span>→</span>
+            </div>
+        </a>
+
+        <!-- 2. Робоче місце заправника -->
+        <a href="index_refueler.html" class="module-card card-refueler">
+            <div>
+                <div class="icon-box">⛽</div>
+                <div class="module-role">Пункти польової видачі • Склад</div>
+                <div class="module-title">Термінал заправника</div>
+                <div class="module-desc">
+                    Ведення електронних роздавальних відомостей (РВ), фіксація видачі пального, олив та спецрідин, облік надходжень на ППВ.
+                </div>
+                <div class="module-tags">
+                    <span class="m-tag">⛽ Видача ПММ</span>
+                    <span class="m-tag">📄 Роздавальні відомості</span>
+                    <span class="m-tag">📥 Прихід на ППВ</span>
+                </div>
+            </div>
+            <div class="module-action">
+                <span>Перейти до авторизації</span>
+                <span>→</span>
+            </div>
+        </a>
+
+        <!-- 3. Система обліку ПММ V4 (СПММ / Підрозділи) -->
+        <a href="index_spmm.html" class="module-card card-spmm">
+            <div>
+                <div class="icon-box">📊</div>
+                <div class="module-role">Служба ПММ • Звіти • Розрахунок</div>
+                <div class="module-title">Система обліку ПММ V4</div>
+                <div class="module-desc">
+                    Зведений облік руху та залишків ПММ, каскадний розрахунок місяця (FIFO), керування парком ОВТ/ІТ та генерація звітів у PDF.
+                </div>
+                <div class="module-tags">
+                    <span class="m-tag">⚙️ Розрахунок FIFO</span>
+                    <span class="m-tag">📑 Звіти та Донесення</span>
+                    <span class="m-tag">🔄 Переміщення ОВТ</span>
+                </div>
+            </div>
+            <div class="module-action">
+                <span>Перейти до авторизації</span>
+                <span>→</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="hub-footer">
+        Автоматизована система управління логістикою та обліку ПММ • PostgreSQL + n8n
+    </div>
+</div>
+
+</body>
+</html>
